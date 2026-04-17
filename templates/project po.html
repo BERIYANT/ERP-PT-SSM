@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSM Portal - Project PO</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00a6ca;
+            --secondary-color: #00c9a7;
+            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
+            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --archive-color: #95a5a6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */        .sidebar.collapsed .menu-arrow {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            height: var(--header-height);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .datetime-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .datetime-display {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00a6ca;
+        }
+
+        .date-display {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--primary-color);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 166, 202, 0.1);
+        }
+
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-archive {
+            background: var(--archive-color);
+            color: white;
+        }
+
+        .btn-archive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Customer List */
+        .customer-list {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .customer-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .customer-item:hover {
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .customer-item.selected {
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .customer-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .customer-name svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--primary-color);
+        }
+
+        .customer-detail {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Project Table */
+        .project-table-container {
+            overflow-x: auto;
+        }
+
+        .project-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .project-table th {
+            text-align: left;
+            padding: 15px;
+            background-color: #f8f9fa;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .project-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 14px;
+        }
+
+        .project-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .customer-header {
+            background-color: #e6f7fb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .customer-header:hover {
+            background-color: #d1eef5;
+        }
+
+        .customer-header td {
+            padding: 12px 15px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .customer-header .arrow {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .customer-header .arrow.open {
+            transform: rotate(90deg);
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success-color);
+        }
+
+        .badge-archive {
+            background: rgba(149, 165, 166, 0.1);
+            color: var(--archive-color);
+        }
+
+        .badge-info {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--info-color);
+        }
+
+        .amount {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0 3px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.edit {
+            background: rgba(0, 166, 202, 0.1);
+            color: var(--primary-color);
+        }
+
+        .action-btn.delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+
+        .action-btn.complete {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--success-color);
+        }
+
+        .action-btn.view {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--info-color);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            stroke: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f9fb;
+            color: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .customer-list {
+                max-height: 200px;
+            }
+
+            .material-topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .material-total-card {
+                width: 100%;
+                text-align: left;
+            }
+
+            .material-total-value {
+                font-size: 24px;
+            }
+
+            .material-search input {
+                max-width: 100%;
+            }
+
+            .material-grid {
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            }
+
+            .material-image {
+                height: 135px;
+            }
+
+            .toggle-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            width: 30px;
+            height: 30px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .menu-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 968px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .header-title {
+                font-size: 18px;
+                margin-right: auto;
+                margin-left: 10px;
+            }
+
+            .datetime-display {
+                font-size: 11px;
+            }
+
+            .date-display {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    {% include 'navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" onclick="toggleMobileMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+            <h1 class="header-title">Project PO</h1>
+            <div class="datetime-info">
+                <div class="datetime-display" id="timeDisplay">00:00:00</div>
+                <div class="date-display" id="dateDisplay">Loading...</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('active')">Project Aktif</div>
+                <div class="tab" onclick="switchTab('archive')">Arsip Project</div>
+            </div>
+
+            <!-- Form Tambah Customer -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Tambah Customer Baru
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Customer</label>
+                        <input type="text" id="customerName" placeholder="Contoh: PT. Maju Jaya">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Customer</label>
+                        <input type="email" id="customerEmail" placeholder="customer@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telepon</label>
+                        <input type="text" id="customerPhone" placeholder="021-1234567">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="addCustomer()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Tambah Customer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pilih Customer -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="8" r="4"></circle>
+                        <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+                    </svg>
+                    Pilih Customer
+                </div>
+
+                <div class="customer-list" id="customerList">
+                    <!-- Customer items akan ditambahkan via JavaScript -->
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Customer Terpilih</label>
+                        <input type="text" id="selectedCustomer" readonly placeholder="Belum ada customer dipilih"
+                            disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Tambah Project PO -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    Tambah Project PO
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nomor PO</label>
+                        <input type="text" id="poNumber" placeholder="Contoh: PO-2025-001" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal PO</label>
+                        <input type="date" id="poDate" disabled>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Deskripsi PO</label>
+                        <textarea id="poDescription" rows="3" placeholder="Deskripsi project..." disabled></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (Rp)</label>
+                        <input type="text" id="poAmount" placeholder="Total otomatis" disabled readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount Jasa (Rp)</label>
+                        <input type="text" id="poAmountJasa" placeholder="Rp 0" disabled
+                            oninput="formatCurrencyInput(this); recalculatePoTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Material (Rp)</label>
+                        <input type="text" id="poAmountMaterial" placeholder="Rp 0" disabled
+                            oninput="formatCurrencyInput(this); recalculatePoTotal()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount Overhead (Rp)</label>
+                        <input type="text" id="poAmountOverhead" placeholder="Rp 0" disabled
+                            oninput="formatCurrencyInput(this); recalculatePoTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Petty Cash (Rp)</label>
+                        <input type="text" id="poAmountPettyCash" placeholder="Rp 0" disabled
+                            oninput="formatCurrencyInput(this); recalculatePoTotal()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nama Project (untuk sidebar)</label>
+                        <input type="text" id="projectName" placeholder="Contoh: Project A" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" id="addProjectBtn" onclick="addProject()" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Tambah Project PO
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daftar Project PO Aktif -->
+            <div class="form-section" id="activeProjectsSection">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="9" x2="15" y2="9"></line>
+                        <line x1="9" y1="13" x2="15" y2="13"></line>
+                        <line x1="9" y1="17" x2="13" y2="17"></line>
+                    </svg>
+                    Daftar Project PO Aktif
+                </div>
+
+                <div class="project-table-container" id="projectTableContainer">
+                    <!-- Tabel akan diisi via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Arsip Project -->
+            <div class="form-section" id="archiveSection" style="display: none;">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 9L9 2L4 5v13l5 3l11-7V9z"></path>
+                        <path d="M4 5l5 3"></path>
+                        <line x1="9" y1="2" x2="9" y2="12"></line>
+                    </svg>
+                    Arsip Project (Selesai)
+                </div>
+
+                <div class="project-table-container" id="archiveTableContainer">
+                    <!-- Tabel arsip akan diisi via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data Store
+        let customers = [];
+        let projects = [];
+        let archivedProjects = [];
+        let selectedCustomerId = null;
+
+        // State untuk dropdown per customer
+        let openCustomers = {};
+
+        // Fungsi untuk set active menu item (background biru permanen)
+        function setActiveMenuItem(element, menuId) {
+            // Hapus class active dari semua menu item
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Tambah class active ke elemen yang diklik
+            element.classList.add('active');
+
+            // Simpan ke localStorage atau session (opsional)
+            sessionStorage.setItem('activeMenu', menuId);
+        }
+
+        // Fungsi untuk set active submenu item (teks biru permanen)
+        function setActiveSubmenu(element, submenuId) {
+            // Hapus class active dari semua submenu item
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Tambah class active ke elemen yang diklik
+            element.classList.add('active');
+
+            // Simpan ke localStorage atau session (opsional)
+            sessionStorage.setItem('activeSubmenu', submenuId);
+        }
+
+        // Fungsi untuk restore active state dari session (saat halaman dimuat)
+        function restoreActiveState() {
+            // Set Master PO sebagai active menu
+            document.querySelectorAll('.menu-item').forEach(item => {
+                const span = item.querySelector('span');
+                if (span && span.textContent === 'Master PO') {
+                    item.classList.add('active');
+                }
+            });
+
+            // Set Project PO sebagai active submenu
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                if (item.textContent === 'Project PO') {
+                    item.classList.add('active');
+                }
+            });
+
+            // Pastikan panah Master PO menghadap ke bawah (rotated)
+            const masterPoArrow = document.getElementById('arrow-master-po');
+            if (masterPoArrow) {
+                masterPoArrow.classList.add('rotated');
+            }
+
+            // Pastikan submenu Master PO terbuka
+            const masterPoSubmenu = document.getElementById('submenu-master-po');
+            if (masterPoSubmenu) {
+                masterPoSubmenu.classList.add('open');
+            }
+        }
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Toggle Submenu
+        function toggleSubmenu(id, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            const submenu = document.getElementById('submenu-' + id);
+            const arrow = document.getElementById('arrow-' + id);
+
+            if (submenu) {
+                submenu.classList.toggle('open');
+                if (arrow) {
+                    arrow.classList.toggle('rotated');
+                }
+            }
+        }
+
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Confirm Logout
+        function confirmLogout(event) {
+            event.preventDefault();
+            if (!confirm('Apakah Anda yakin ingin logout?')) return;
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .finally(() => { window.location.href = '/login'; });
+        }
+
+        // Switch Tab
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            const activeSection = document.getElementById('activeProjectsSection');
+            const archiveSection = document.getElementById('archiveSection');
+
+            tabs.forEach(t => t.classList.remove('active'));
+
+            if (tab === 'active') {
+                tabs[0].classList.add('active');
+                activeSection.style.display = 'block';
+                archiveSection.style.display = 'none';
+            } else {
+                tabs[1].classList.add('active');
+                activeSection.style.display = 'none';
+                archiveSection.style.display = 'block';
+                renderArchiveTable();
+            }
+        }
+
+        // Format Rupiah
+        function formatRupiah(amount) {
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        // Format Date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // Tambah Customer
+        async function addCustomer() {
+            const name = document.getElementById('customerName').value.trim();
+            const email = document.getElementById('customerEmail').value.trim();
+            const phone = document.getElementById('customerPhone').value.trim();
+
+            if (!name) { alert('Nama customer harus diisi!'); return; }
+
+            const res = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ name, email, phone })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const c = data.data;
+                customers.push({ id: c.id, name: c.name, email: c.email || '-', phone: c.phone || '-' });
+                openCustomers[c.id] = true;
+                renderCustomerList();
+                renderProjectTable();
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerEmail').value = '';
+                document.getElementById('customerPhone').value = '';
+                alert('Customer berhasil ditambahkan!');
+            } else {
+                alert(data.message || 'Gagal menambah customer');
+            }
+        }
+
+        // Pilih Customer
+        function selectCustomer(customerId) {
+            selectedCustomerId = customerId;
+
+            // Update tampilan customer terpilih
+            const customer = customers.find(c => c.id === customerId);
+            document.getElementById('selectedCustomer').value = customer ? customer.name : '';
+
+            // Enable form project PO
+            document.getElementById('poNumber').disabled = false;
+            document.getElementById('poDate').disabled = false;
+            document.getElementById('poDescription').disabled = false;
+            document.getElementById('poAmount').disabled = false;
+            document.getElementById('poAmountJasa').disabled = false;
+            document.getElementById('poAmountMaterial').disabled = false;
+            document.getElementById('poAmountOverhead').disabled = false;
+            document.getElementById('poAmountPettyCash').disabled = false;
+            document.getElementById('projectName').disabled = false;
+            document.getElementById('addProjectBtn').disabled = false;
+
+            // Update class selected di daftar customer
+            renderCustomerList();
+        }
+
+        function formatCurrencyInput(el) {
+            const raw = el.value.replace(/[^\d]/g, '');
+            const num = parseInt(raw, 10);
+            el.value = raw === '' ? '' : 'Rp ' + num.toLocaleString('id-ID');
+        }
+
+        function parseCurrencyInput(id) {
+            const val = document.getElementById(id).value.replace(/[^\d]/g, '');
+            return val === '' ? 0 : parseInt(val, 10);
+        }
+
+        function recalculatePoTotal() {
+            const jasa = parseCurrencyInput('poAmountJasa');
+            const material = parseCurrencyInput('poAmountMaterial');
+            const overhead = parseCurrencyInput('poAmountOverhead');
+            const pettyCash = parseCurrencyInput('poAmountPettyCash');
+            const total = jasa + material + overhead + pettyCash;
+            document.getElementById('poAmount').value = total > 0 ? 'Rp ' + total.toLocaleString('id-ID') : '';
+        }
+
+        // Toggle Customer Projects
+        function toggleCustomer(customerId) {
+            openCustomers[customerId] = !openCustomers[customerId];
+            renderProjectTable();
+        }
+
+        // Tambah Project
+        async function addProject() {
+            if (!selectedCustomerId) { alert('Pilih customer terlebih dahulu!'); return; }
+
+            const poNumber = document.getElementById('poNumber').value.trim();
+            const poDate = document.getElementById('poDate').value;
+            const poDescription = document.getElementById('poDescription').value.trim();
+            const poAmount = parseCurrencyInput('poAmount');
+            const projectName = document.getElementById('projectName').value.trim();
+            const jasaAmount = parseCurrencyInput('poAmountJasa');
+            const materialAmount = parseCurrencyInput('poAmountMaterial');
+            const overheadAmount = parseCurrencyInput('poAmountOverhead');
+            const pettyCashAmount = parseCurrencyInput('poAmountPettyCash');
+
+            if (!poNumber || !poDate || !poDescription || !poAmount || !projectName) {
+                alert('Semua field harus diisi!');
+                return;
+            }
+
+            const res = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    customer_id: selectedCustomerId,
+                    project_type: 'po',
+                    project_name: projectName,
+                    po_number: poNumber,
+                    po_date: poDate,
+                    description: poDescription,
+                    amount: poAmount,
+                    jasa_amount: jasaAmount,
+                    material_amount: materialAmount,
+                    overhead_amount: overheadAmount,
+                    petty_cash_amount: pettyCashAmount
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const p = data.data;
+                projects.push({ id: p.id, customerId: p.customer_id, poNumber: p.po_number, poDate: p.po_date, description: p.description, amount: p.amount, projectName: p.project_name, status: 'active' });
+                openCustomers[selectedCustomerId] = true;
+                renderProjectTable();
+                renderSidebarProjects();
+                document.getElementById('poNumber').value = '';
+                document.getElementById('poDate').value = '';
+                document.getElementById('poDescription').value = '';
+                document.getElementById('poAmount').value = '';
+                document.getElementById('poAmountJasa').value = '';
+                document.getElementById('poAmountMaterial').value = '';
+                document.getElementById('poAmountOverhead').value = '';
+                document.getElementById('poAmountPettyCash').value = '';
+                document.getElementById('projectName').value = '';
+                alert('Project PO berhasil ditambahkan!');
+            } else {
+                alert(data.message || 'Gagal menambah project');
+            }
+        }
+
+        // Edit Project
+        async function editProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const newPoNumber = prompt('Edit Nomor PO:', project.poNumber);
+            if (newPoNumber === null) return;
+
+            const newDescription = prompt('Edit Deskripsi:', project.description);
+            if (newDescription === null) return;
+
+            const newAmount = prompt('Edit Amount (Rp):', project.amount);
+            if (newAmount === null) return;
+
+            const newProjectName = prompt('Edit Nama Project:', project.projectName);
+            if (newProjectName === null) return;
+
+            const res = await fetch(`/api/projects/${projectId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    po_number: newPoNumber,
+                    description: newDescription,
+                    amount: parseFloat(newAmount),
+                    project_name: newProjectName
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                project.poNumber = newPoNumber;
+                project.description = newDescription;
+                project.amount = parseFloat(newAmount);
+                project.projectName = newProjectName;
+                renderProjectTable();
+                renderSidebarProjects();
+            } else {
+                alert(data.message || 'Gagal mengubah project');
+            }
+        }
+
+        // Selesaikan Project (pindah ke arsip)
+        async function completeProject(projectId) {
+            if (!confirm('Apakah project ini sudah selesai? Project akan dipindahkan ke arsip.')) return;
+            const res = await fetch(`/api/projects/${projectId}/archive`, {
+                method: 'PATCH',
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+            if (data.success) {
+                const idx = projects.findIndex(p => p.id === projectId);
+                if (idx !== -1) {
+                    const cp = { ...projects[idx], status: 'archived', completedDate: new Date().toISOString() };
+                    archivedProjects.push(cp);
+                    projects.splice(idx, 1);
+                    renderProjectTable();
+                    renderArchiveTable();
+                    renderSidebarProjects();
+                    // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
+                    alert('Project telah dipindahkan ke arsip!');
+                }
+            } else {
+                alert(data.message || 'Gagal mengarsipkan project');
+            }
+        }
+
+        // Pulihkan Project dari Arsip
+        async function restoreProject(projectId) {
+            if (!confirm('Apakah Anda yakin ingin memulihkan project ini dari arsip?')) return;
+            const res = await fetch(`/api/projects/${projectId}/restore`, {
+                method: 'PATCH',
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+            if (data.success) {
+                const idx = archivedProjects.findIndex(p => p.id === projectId);
+                if (idx !== -1) {
+                    const rp = { ...archivedProjects[idx], status: 'active', completedDate: null };
+                    projects.push(rp);
+                    archivedProjects.splice(idx, 1);
+                    renderProjectTable();
+                    renderArchiveTable();
+                    renderSidebarProjects();
+                    // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
+                    alert('Project telah dipulihkan dari arsip!');
+                }
+            } else {
+                alert(data.message || 'Gagal memulihkan project');
+            }
+        }
+
+        // Delete Project
+        async function deleteProject(projectId, isArchive = false) {
+            if (!confirm('Apakah Anda yakin ingin menghapus project ini?')) return;
+            const res = await fetch(`/api/projects/${projectId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (isArchive) {
+                    archivedProjects = archivedProjects.filter(p => p.id !== projectId);
+                    renderArchiveTable();
+                    // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
+                } else {
+                    projects = projects.filter(p => p.id !== projectId);
+                    renderProjectTable();
+                    renderSidebarProjects();
+                }
+            } else {
+                alert(data.message || 'Gagal menghapus project');
+            }
+        }
+
+        // Lihat Detail Project Arsip
+        function viewProjectDetail(projectId) {
+            const project = archivedProjects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const customer = customers.find(c => c.id === project.customerId);
+
+            alert(`
+DETAIL PROJECT ARSIP
+═══════════════════════
+
+Nama Project    : ${project.projectName}
+Nomor PO        : ${project.poNumber}
+Customer        : ${customer ? customer.name : '-'}
+Deskripsi       : ${project.description}
+Tanggal PO      : ${formatDate(project.poDate)}
+Tanggal Selesai : ${project.completedDate ? formatDate(project.completedDate) : '-'}
+Amount          : ${formatRupiah(project.amount)}
+
+Status          : Selesai (Diarsipkan)
+            `);
+        }
+
+        // Render Daftar Customer
+        function renderCustomerList() {
+            const container = document.getElementById('customerList');
+
+            if (customers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+                        </svg>
+                        <p>Belum ada customer. Tambahkan customer terlebih dahulu.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = customers.map(customer => `
+                <div class="customer-item ${selectedCustomerId === customer.id ? 'selected' : ''}" onclick="selectCustomer(${customer.id})">
+                    <div class="customer-name">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+                        </svg>
+                        ${customer.name}
+                    </div>
+                    <div class="customer-detail">
+                        <span>Email: ${customer.email}</span>
+                        <span>Tel: ${customer.phone}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Tabel Project Aktif
+        function renderProjectTable() {
+            const container = document.getElementById('projectTableContainer');
+
+            if (customers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="9"></line>
+                            <line x1="9" y1="13" x2="15" y2="13"></line>
+                            <line x1="9" y1="17" x2="13" y2="17"></line>
+                        </svg>
+                        <p>Belum ada customer. Silahkan tambah customer terlebih dahulu.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="9"></line>
+                            <line x1="9" y1="13" x2="15" y2="13"></line>
+                            <line x1="9" y1="17" x2="13" y2="17"></line>
+                        </svg>
+                        <p>Belum ada project PO aktif. Pilih customer dan tambah project PO.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<table class="project-table">';
+            html += `
+                <thead>
+                    <tr>
+                        <th>Nomor PO</th>
+                        <th>Tanggal PO</th>
+                        <th>Deskripsi</th>
+                        <th>Amount</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            // Group projects by customer
+            customers.forEach(customer => {
+                const customerProjects = projects.filter(p => p.customerId === customer.id);
+
+                if (customerProjects.length > 0) {
+                    // Customer header row dengan dropdown toggle
+                    const isOpen = openCustomers[customer.id] || false;
+
+                    html += `
+                        <tr class="customer-header" onclick="toggleCustomer(${customer.id})">
+                            <td colspan="5">
+                                <span class="arrow ${isOpen ? 'open' : ''}">▶</span>
+                                <strong>${customer.name}</strong> (${customerProjects.length} project)
+                            </td>
+                        </tr>
+                    `;
+
+                    // Project rows (hanya tampil jika open)
+                    if (isOpen) {
+                        customerProjects.forEach(project => {
+                            html += `
+                                <tr>
+                                    <td><span class="badge badge-success">${project.poNumber}</span></td>
+                                    <td>${formatDate(project.poDate)}</td>
+                                    <td>${project.description}</td>
+                                    <td class="amount">${formatRupiah(project.amount)}</td>
+                                    <td>
+                                        <button class="action-btn edit" onclick="editProject(${project.id})">Edit</button>
+                                        <button class="action-btn complete" onclick="completeProject(${project.id})">Selesai</button>
+                                        <button class="action-btn delete" onclick="deleteProject(${project.id})">Hapus</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Render Tabel Arsip
+        function renderArchiveTable() {
+            const container = document.getElementById('archiveTableContainer');
+
+            if (archivedProjects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 9L9 2L4 5v13l5 3l11-7V9z"></path>
+                            <path d="M4 5l5 3"></path>
+                            <line x1="9" y1="2" x2="9" y2="12"></line>
+                        </svg>
+                        <p>Belum ada project yang diarsipkan.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<table class="project-table">';
+            html += `
+                <thead>
+                    <tr>
+                        <th>Nama Project</th>
+                        <th>Nomor PO</th>
+                        <th>Customer</th>
+                        <th>Tanggal Selesai</th>
+                        <th>Amount</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            archivedProjects.forEach(project => {
+                const customer = customers.find(c => c.id === project.customerId);
+                const completedDate = project.completedDate ? formatDate(project.completedDate) : '-';
+
+                html += `
+                    <tr>
+                        <td><span class="badge badge-archive">${project.projectName}</span></td>
+                        <td>${project.poNumber}</td>
+                        <td>${customer ? customer.name : '-'}</td>
+                        <td>${completedDate}</td>
+                        <td class="amount">${formatRupiah(project.amount)}</td>
+                        <td>
+                            <button class="action-btn view" onclick="viewProjectDetail(${project.id})">Lihat Detail</button>
+                            <button class="action-btn complete" onclick="restoreProject(${project.id})">Pulihkan</button>
+                            <button class="action-btn delete" onclick="deleteProject(${project.id}, true)">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Render Sidebar Projects (Dynamic) - TANPA BADGE ANGKA
+        async function renderSidebarProjects() {
+            const container = document.getElementById('dynamicProjects');
+            if (!container) return;
+
+            try {
+                const [resPo, resNonPo, resArchive] = await Promise.all([
+                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
+                ]);
+
+                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const dataPo = await resPo.json();
+                const dataNonPo = await resNonPo.json();
+                const dataArchive = await resArchive.json();
+                const allProjects = [
+                    ...(dataPo.success ? dataPo.data : []),
+                    ...(dataNonPo.success ? dataNonPo.data : []),
+                    ...(dataArchive.success ? dataArchive.data : [])
+                ];
+
+                const projectMap = new Map();
+                allProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    if (!projectName) return;
+                    if (!projectMap.has(projectName)) {
+                        projectMap.set(projectName, project);
+                    }
+                });
+
+                const uniqueProjects = [...projectMap.values()];
+                if (uniqueProjects.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                uniqueProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    const projectIdNumber = project.id;
+                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
+                    html += `
+                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span>${projectName}</span>
+                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div class="submenu" id="submenu-${projectId}">
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
+                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
+                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
+                    </div>
+                `;
+                });
+                container.innerHTML = html;
+
+                // Add event listeners after HTML is rendered
+                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        const arrow = this.querySelector('.menu-arrow');
+                        if (arrow && arrow.contains(e.target)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const projectSlug = this.getAttribute('data-project-slug');
+                            toggleSubmenu(projectSlug, e);
+                        } else {
+                            const projectId = this.getAttribute('data-project-id');
+                            setActiveMenuItem(this, 'project-' + projectId);
+                            window.location.href = '/dashboard/project/' + projectId;
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        // Render Arsip di Sidebar - TANPA BADGE ANGKA
+        // COMMENTED OUT: Static menu items are now in navbar.html
+        /*
+        function renderArchiveSidebar() {
+            const container = document.getElementById('submenu-arsip');
+
+            if (archivedProjects.length === 0) {
+                container.innerHTML = `
+                    <div class="submenu-item level-2" style="color: #999; cursor: default;">
+                        Tidak ada arsip
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by project name
+            const groupedArsip = {};
+            archivedProjects.forEach(project => {
+                if (!groupedArsip[project.projectName]) {
+                    groupedArsip[project.projectName] = [];
+                }
+                groupedArsip[project.projectName].push(project);
+            });
+
+            let html = '';
+            Object.keys(groupedArsip).forEach(projectName => {
+                html += `
+                    <div class="submenu-item level-2" onclick="setActiveSubmenu(this, '${projectName}')">
+                        <span>${projectName}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+        */
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+
+            if (window.innerWidth <= 968) {
+                if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        // Sample data untuk demo
+        window.onload = async function () {
+            // Load data dari API
+            try {
+                const [resC, resP, resA] = await Promise.all([
+                    fetch('/api/customers', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=po&status=active', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=po&status=archived', { credentials: 'same-origin' })
+                ]);
+                if (resC.status === 401) { window.location.href = '/login'; return; }
+                const dataC = await resC.json();
+                const dataP = await resP.json();
+                const dataA = await resA.json();
+                if (dataC.success) customers = dataC.data.map(c => ({ id: c.id, name: c.name, email: c.email || '-', phone: c.phone || '-' }));
+                if (dataP.success) projects = dataP.data.map(p => ({ id: p.id, customerId: p.customer_id, poNumber: p.po_number, poDate: p.po_date, description: p.description, amount: p.amount, projectName: p.project_name, status: 'active' }));
+                if (dataA.success) archivedProjects = dataA.data.map(p => ({ id: p.id, customerId: p.customer_id, poNumber: p.po_number, poDate: p.po_date, description: p.description, amount: p.amount, projectName: p.project_name, status: 'archived', completedDate: p.completed_date }));
+            } catch (e) { console.error('Gagal memuat data:', e); }
+
+            // Buka semua dropdown secara default
+            customers.forEach(c => { openCustomers[c.id] = true; });
+
+            renderCustomerList();
+            renderProjectTable();
+            renderArchiveTable();
+            renderSidebarProjects();
+            // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
+            renderMaterialCards();
+
+            // Restore active state
+            restoreActiveState();
+        };
+    </script>
+
+    <script>
+        // Update datetime display
+        function updateDateTime() {
+            const now = new Date();
+
+            // Format time: HH:MM:SS
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            // Format date: Hari, DD Bulan YYYY
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            const dayName = days[now.getDay()];
+            const date = String(now.getDate()).padStart(2, '0');
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            const dateString = `${dayName}, ${date} ${monthName} ${year}`;
+
+            // Update display
+            document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('dateDisplay').textContent = dateString;
+        }
+
+        // Update every second
+        setInterval(updateDateTime, 1000);
+        // Initial update
+        updateDateTime();
+    </script>
+</body>
+
+</html>

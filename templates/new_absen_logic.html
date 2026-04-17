@@ -1,0 +1,329 @@
+<!-- Modal Add Absen -->
+<div id="addAbsenModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto;">
+    <div class="modal-content-wrapper" style="background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 15px; margin: 20px;">
+        <h2 style="margin-top: 0; color: #333; margin-bottom: 25px;">Tambah Laporan Lapangan Baru</h2>
+        
+        <form id="addAbsenForm" style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Tanggal</label>
+                    <input type="date" id="absenTanggal" required style="width: 100%; padding: 12px 15px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Waktu Lapor</label>
+                    <input type="time" id="absenWaktu" required style="width: 100%; padding: 12px 15px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 14px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Pilih Project</label>
+                    <select id="absenProject" required style="width: 100%; padding: 12px 15px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 14px;"></select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Segmen</label>
+                    <input type="text" id="absenSegmen" placeholder="Contoh: KROYA - CILACAP" required style="width: 100%; padding: 12px 15px; border: 2px solid #e8e8e8; border-radius: 10px; font-size: 14px;">
+                </div>
+            </div>
+
+            <!-- Dynamic Detail Form -->
+            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <h3 style="font-size: 16px; margin-bottom: 10px; color: #333;">Data Progres (Item)</h3>
+                <div id="absenItemsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Items appended here -->
+                </div>
+                <button type="button" onclick="addAbsenItem()" style="margin-top: 10px; background: #eee; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: #555; font-weight: 600;">+ Tambah Item Progres</button>
+            </div>
+
+            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <h3 style="font-size: 16px; margin-bottom: 10px; color: #333;">Upload Foto Dokumentasi</h3>
+                <input type="file" id="absenFotoList" multiple accept="image/*" style="width: 100%; padding: 10px; border: 2px dashed #ccc; border-radius: 10px; cursor: pointer;">
+                <small style="color: #666; display: block; margin-top: 5px;">*Anda dapat memilih lebih dari satu foto.</small>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" onclick="closeAddAbsenModal()" style="padding: 12px 20px; background: #eee; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Batal</button>
+                <button type="button" onclick="submitAbsen()" style="padding: 12px 25px; background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Simpan Laporan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Update Load Reports Function
+    async function loadReports(dateStr) {
+        const container = document.getElementById('reportsContainer');
+        container.innerHTML = '<div class="empty-state"><p>Memuat data...</p></div>';
+
+        try {
+            const res = await fetch(`/api/absen?tanggal=${dateStr}`, { credentials: 'same-origin' });
+            if (res.status === 401) { window.location.href = '/login'; return; }
+            const result = await res.json();
+            
+            if (result.success) {
+                renderReports(result.data, dateStr);
+            } else {
+                container.innerHTML = `<div class="empty-state"><p>Gagal memuat: ${result.message}</p></div>`;
+            }
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = '<div class="empty-state"><p>Terjadi kesalahan koneksi.</p></div>';
+        }
+    }
+
+    function renderReports(items, dateStr) {
+        const container = document.getElementById('reportsContainer');
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+                </svg>
+                <p>Belum ada laporan absen pada tanggal ini.</p>
+            </div>`;
+            return;
+        }
+
+        // Grouping API logic handles list of projects but let's assume it returns standard flatten since that's what models Absen to_dict gives
+        // We will group them by project_id locally
+        const grouped = {};
+        items.forEach(absen => {
+            const pid = absen.project_id;
+            if(!grouped[pid]) {
+                grouped[pid] = { name: absen.project_name, records: [] };
+            }
+            grouped[pid].records.push(absen);
+        });
+
+        let html = '';
+        Object.keys(grouped).forEach(pid => {
+            const project = grouped[pid];
+            // Format first record time as badge
+            const badgeTime = project.records[0] ? project.records[0].waktu_lapor : '';
+
+            html += `
+            <div class="project-header" onclick="toggleProject('project-${pid}')">
+                <div class="project-header-content">
+                    <span class="arrow" id="arrow-project-${pid}">▶</span>
+                    <span class="project-name">${project.name || 'Proyek Tanpa Nama'}</span>
+                    <span class="project-badge">${badgeTime || 'N/A'}</span>
+                </div>
+            </div>
+            <div id="project-${pid}-content" style="display: block;">
+            `;
+
+            project.records.forEach(record => {
+                // Determine layout grouping for dict entries
+                const kats = {};
+                record.detail.forEach(d => {
+                    const cat = d.kategori || 'LAINNYA';
+                    if(!kats[cat]) kats[cat] = [];
+                    kats[cat].push(d);
+                });
+
+                let statsHtml = '';
+                Object.keys(kats).forEach(catName => {
+                    statsHtml += `
+                    <div class="stat-group">
+                        <div class="stat-group-title">${catName}</div>`;
+                    kats[catName].forEach(it => {
+                        statsHtml += `
+                        <div class="stat-item">
+                            <span class="stat-label">${it.label}</span>
+                            <span class="stat-value">${it.nilai} ${it.satuan || ''}</span>
+                        </div>`;
+                    });
+                    statsHtml += `</div>`;
+                });
+
+                let photosHtml = '';
+                if(record.foto && record.foto.length > 0) {
+                    photosHtml += `
+                    <div class="photo-section">
+                        <div class="photo-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="2.18"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            Dokumentasi Kegiatan (${record.foto.length} foto)
+                        </div>
+                        <div class="photo-grid">`;
+                    record.foto.forEach(f => {
+                        photosHtml += `
+                            <div class="photo-item">
+                                <img src="${f.url}" alt="Foto" style="width:100%; height:120px; object-fit:cover;">
+                                <div class="photo-caption">${f.caption || 'Tanpa Keterangan'}</div>
+                            </div>
+                        `;
+                    });
+                    photosHtml += `</div></div>`;
+                }
+
+                html += `
+                <div class="report-card">
+                    <div class="report-header">
+                        <div class="report-title">PROGRES IJE ${dateStr}</div>
+                        <div class="report-date">${dateStr} • ${record.waktu_lapor || ''}</div>
+                    </div>
+                    ${record.segmen ? `<div class="report-segment">SEGMEN : ${record.segmen}</div>` : ''}
+                    <div class="report-stats">${statsHtml}</div>
+                    ${photosHtml}
+                    <div style="margin-top:15px; text-align:right;">
+                         <button class="btn btn-danger" onclick="deleteAbsen(${record.id}, '${project.name}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Hapus Laporan</button>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div>`; // Close project content wrapper
+        });
+
+        container.innerHTML = html;
+        // Open the first project by default
+        const firstPid = Object.keys(grouped)[0];
+        if (firstPid) {
+            const arr = document.getElementById(`arrow-project-${firstPid}`);
+            if(arr) arr.classList.add('open');
+        }
+    }
+
+    // Rewrite filterByDate
+    window.filterByDate = function() {
+        const datePicker = document.getElementById('datePicker');
+        const selectedDate = new Date(datePicker.value);
+        const dateBadge = document.getElementById('selectedDate');
+
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        const formattedDate = selectedDate.toLocaleDateString('id-ID', options);
+        dateBadge.textContent = formattedDate;
+
+        // Fetch data
+        loadReports(datePicker.value);
+    }
+
+    // Add Absen Logic
+    function openAddAbsenModal() {
+        document.getElementById('addAbsenForm').reset();
+        document.getElementById('absenItemsContainer').innerHTML = '';
+        
+        // Auto-fill active projects
+        const sel = document.getElementById('absenProject');
+        sel.innerHTML = '<option value="">-- Pilih Project --</option>';
+        projects.forEach(p => {
+            if(p.id) sel.innerHTML += `<option value="${p.id}">${p.projectName}</option>`;
+        });
+        
+        // Auto fill date
+        document.getElementById('absenTanggal').value = document.getElementById('datePicker').value;
+        const now = new Date();
+        document.getElementById('absenWaktu').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        // Add 1 default item
+        addAbsenItem();
+
+        document.getElementById('addAbsenModal').style.display = 'flex';
+    }
+
+    function closeAddAbsenModal() {
+        document.getElementById('addAbsenModal').style.display = 'none';
+    }
+
+    function addAbsenItem() {
+        const cont = document.getElementById('absenItemsContainer');
+        const d = document.createElement('div');
+        d.style.display = 'grid';
+        d.style.gridTemplateColumns = '1.5fr 2fr 1fr 1fr auto';
+        d.style.gap = '10px';
+        d.innerHTML = `
+            <input type="text" placeholder="Kategori (Misal: LINE 48C)" class="abs-cat" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <input type="text" placeholder="Nama Barang (ODP)" class="abs-lbl" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <input type="number" placeholder="Nilai (39)" class="abs-val" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <input type="text" placeholder="Satuan (m)" class="abs-sat" required style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <button type="button" onclick="this.parentElement.remove()" style="padding: 8px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">X</button>
+        `;
+        cont.appendChild(d);
+    }
+
+    async function submitAbsen() {
+        // Collect data
+        const tgl = document.getElementById('absenTanggal').value;
+        const wkt = document.getElementById('absenWaktu').value;
+        const pid = document.getElementById('absenProject').value;
+        const pname = document.getElementById('absenProject').options[document.getElementById('absenProject').selectedIndex].text;
+        const segmen = document.getElementById('absenSegmen').value;
+
+        if(!tgl || !wkt || !pid || !segmen) {
+            alert('Harap lengkapi semua isian utama.');
+            return;
+        }
+
+        const details = [];
+        document.querySelectorAll('#absenItemsContainer > div').forEach(row => {
+            details.push({
+                kategori: row.querySelector('.abs-cat').value,
+                label: row.querySelector('.abs-lbl').value,
+                nilai: row.querySelector('.abs-val').value,
+                satuan: row.querySelector('.abs-sat').value,
+            });
+        });
+
+        try {
+            // Post main record
+            const res = await fetch('/api/absen/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    tanggal: tgl,
+                    waktu_lapor: wkt,
+                    project_id: parseInt(pid),
+                    project_name: pname,
+                    segmen: segmen,
+                    detail: details
+                })
+            });
+
+            const result = await res.json();
+            if(!result.success) throw new Error(result.message);
+
+            const insertedId = result.data.id;
+
+            // Post photos if any
+            const files = document.getElementById('absenFotoList').files;
+            if(files.length > 0) {
+                const formData = new FormData();
+                for(let i=0; i<files.length; i++) {
+                    formData.append('foto', files[i]);
+                }
+                const resFoto = await fetch(`/api/absen/${insertedId}/foto`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: formData
+                });
+                const resultFoto = await resFoto.json();
+                if(!resultFoto.success) alert('Warning: Gagal upload foto: ' + resultFoto.message);
+            }
+
+            alert('✅ Laporan berhasil disimpan!');
+            closeAddAbsenModal();
+            filterByDate(); // Reload current date
+        } catch(e) {
+            alert('❌ Gagal: ' + e.message);
+        }
+    }
+
+    async function deleteAbsen(id, pname) {
+        if(!confirm(`Yakin ingin menghapus laporan absen ${pname}?`)) return;
+        try {
+            const res = await fetch(`/api/absen/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+            const result = await res.json();
+            if(result.success) {
+                filterByDate();
+            } else {
+                alert('Gagal: ' + result.message);
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+</script>

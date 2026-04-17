@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSM Portal - Absen Lapangan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00a6ca;
+            --secondary-color: #00c9a7;
+            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
+            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --paid-color: #27ae60;
+            --archive-color: #95a5a6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */        .sidebar.collapsed .menu-arrow {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            height: var(--header-height);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .datetime-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .datetime-display {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00a6ca;
+        }
+
+        .date-display {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Date Filter */
+        .date-filter {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-filter label {
+            font-weight: 600;
+            color: #666;
+            min-width: 100px;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 12px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .date-filter input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .date-filter .btn {
+            padding: 12px 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-filter .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .date-badge {
+            background: var(--gradient);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--primary-color);
+        }
+
+        /* Project Header */
+        .project-header {
+            background-color: #e6f7fb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .project-header:hover {
+            background-color: #d1eef5;
+        }
+
+        .project-header-content {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .project-header .arrow {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .project-header .arrow.open {
+            transform: rotate(90deg);
+        }
+
+        .project-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .project-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* Report Card */
+        .report-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .report-date {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .report-segment {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+            border: 1px solid #e8e8e8;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-group {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .stat-group-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stat-value.highlight {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e8e8e8;
+            margin: 15px 0;
+        }
+
+        /* Photo Section */
+        .photo-section {
+            margin-top: 20px;
+        }
+
+        .photo-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .photo-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e8e8e8;
+            transition: all 0.3s ease;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .photo-image {
+            width: 100%;
+            height: 120px;
+            background: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .photo-image svg {
+            width: 40px;
+            height: 40px;
+            stroke: #ccc;
+        }
+
+        .photo-caption {
+            padding: 8px;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .timestamp {
+            font-size: 10px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            stroke: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .report-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .date-filter {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .date-filter .btn {
+                width: 100%;
+            }
+
+            .toggle-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            width: 30px;
+            height: 30px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .menu-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 968px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .header-title {
+                font-size: 18px;
+                margin-right: auto;
+                margin-left: 10px;
+            }
+
+            .datetime-display {
+                font-size: 11px;
+            }
+
+            .date-display {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    {% include 'navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" onclick="toggleMobileMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+            <h1 class="header-title">Absen Lapangan</h1>
+            <div class="datetime-info">
+                <div class="datetime-display" id="timeDisplay">00:00:00</div>
+                <div class="date-display" id="dateDisplay">Loading...</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Date Filter -->
+            <div class="date-filter">
+                <label for="datePicker">Pilih Tanggal:</label>
+                <input type="date" id="datePicker" value="2026-02-24" onchange="filterByDate()">
+                <button class="btn" onclick="filterByDate()">Tampilkan</button>
+                <div class="date-badge" id="selectedDate">24 Februari 2026</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #333; margin: 0; font-size: 20px;">Daftar Laporan (Berdasarkan Tanggal)</h2>
+                <button class="btn btn-primary" onclick="openAddAbsenModal()" style="background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">+ Tambah Laporan Baru</button>
+            </div>
+            <!-- Daftar Laporan per Project -->
+            <div id="reportsContainer">
+                <!-- Dimuat via JS -->
+                 <div class="empty-state">
+                    <p>Silakan tunggu...</p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== DATA STORE ====================
+        let projects = [];
+
+        // ==================== UTILITY FUNCTIONS ====================
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Toggle Submenu
+        function toggleSubmenu(id, event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const submenu = document.getElementById('submenu-' + id);
+            const arrow = document.getElementById('arrow-' + id);
+            if (submenu) {
+                submenu.classList.toggle('open');
+                if (arrow) {
+                    arrow.classList.toggle('rotated');
+                }
+            }
+        }
+
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function confirmLogout(event) {
+            event.preventDefault();
+            if (!confirm('Apakah Anda yakin ingin logout?')) return;
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .finally(() => { window.location.href = '/login'; });
+        }
+
+        // Set active menu item
+        function setActiveMenuItem(element, menuId) {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            sessionStorage.setItem('activeMenu', menuId);
+        }
+
+        // Set active submenu item
+        function setActiveSubmenu(element, submenuId) {
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            sessionStorage.setItem('activeSubmenu', submenuId);
+            return false;
+        }
+
+        // Toggle Project Content
+        function toggleProject(projectId) {
+            const content = document.getElementById(projectId + '-content');
+            const arrow = document.getElementById('arrow-' + projectId);
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.classList.add('open');
+            } else {
+                content.style.display = 'none';
+                arrow.classList.remove('open');
+            }
+        }
+
+        // Filter by Date
+        function filterByDate() {
+            const datePicker = document.getElementById('datePicker');
+            const selectedDate = new Date(datePicker.value);
+            const dateBadge = document.getElementById('selectedDate');
+
+            // Format tanggal ke bahasa Indonesia
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const formattedDate = selectedDate.toLocaleDateString('id-ID', options);
+            dateBadge.textContent = formattedDate;
+
+            // Update judul section
+            const sectionTitle = document.querySelector('.section-title');
+            sectionTitle.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+                </svg>
+                Laporan Kegiatan Lapangan - ${formattedDate}
+            `;
+
+            // Di sini nanti bisa dipanggil fungsi untuk load data berdasarkan tanggal
+            console.log('Filter by date:', datePicker.value);
+        }
+
+        // Render Sidebar Projects (Dynamic)
+        async function renderSidebarProjects() {
+            const container = document.getElementById('dynamicProjects');
+            if (!container) return;
+
+            try {
+                const [resPo, resNonPo, resArchive] = await Promise.all([
+                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
+                ]);
+
+                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const dataPo = await resPo.json();
+                const dataNonPo = await resNonPo.json();
+                const dataArchive = await resArchive.json();
+                const allProjects = [
+                    ...(dataPo.success ? dataPo.data : []),
+                    ...(dataNonPo.success ? dataNonPo.data : []),
+                    ...(dataArchive.success ? dataArchive.data : [])
+                ];
+
+                const projectMap = new Map();
+                allProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    if (!projectName) return;
+                    if (!projectMap.has(projectName)) {
+                        projectMap.set(projectName, project);
+                    }
+                });
+
+                const uniqueProjects = [...projectMap.values()];
+                if (uniqueProjects.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                uniqueProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    const projectIdNumber = project.id;
+                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
+                    html += `
+                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span>${projectName}</span>
+                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div class="submenu" id="submenu-${projectId}">
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
+                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
+                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
+                    </div>
+                `;
+                });
+                container.innerHTML = html;
+
+                // Add event listeners after HTML is rendered
+                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        const arrow = this.querySelector('.menu-arrow');
+                        if (arrow && arrow.contains(e.target)) {
+                            // Clicked on arrow - toggle submenu
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const projectSlug = this.getAttribute('data-project-slug');
+                            toggleSubmenu(projectSlug, e);
+                        } else {
+                            // Clicked on menu item - navigate to dashboard
+                            const projectId = this.getAttribute('data-project-id');
+                            setActiveMenuItem(this, 'project-' + projectId);
+                            window.location.href = '/dashboard/project/' + projectId;
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        // Initialize
+        window.onload = async function () {
+            // Set today's date
+            const today = new Date().toISOString().slice(0, 10);
+            const dp = document.getElementById('datePicker');
+            if (dp) dp.value = today;
+            filterByDate();
+
+            // Load sidebar projects from API
+            try {
+                const res = await fetch('/api/projects?status=active', { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                const data = await res.json();
+                if (data.success) {
+                    const uniqueNames = [...new Set(data.data.map(p => p.project_name))];
+                    projects = uniqueNames.map((name, i) => ({ id: i + 1, projectName: name, status: 'active' }));
+                }
+            } catch (e) { console.error('Gagal memuat projects:', e); }
+            renderSidebarProjects();
+        };
+    </script>
+
+    <script>
+        // Update datetime display
+        function updateDateTime() {
+            const now = new Date();
+
+            // Format time: HH:MM:SS
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            // Format date: Hari, DD Bulan YYYY
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            const dayName = days[now.getDay()];
+            const date = String(now.getDate()).padStart(2, '0');
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            const dateString = `${dayName}, ${date} ${monthName} ${year}`;
+
+            // Update display
+            document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('dateDisplay').textContent = dateString;
+        }
+
+        // Update every second
+        setInterval(updateDateTime, 1000);
+        // Initial update
+        updateDateTime();
+    </script>
+    
+    {% include 'new_absen_logic.html' %}
+</body>
+
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSM Portal - Log Aktivitas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00a6ca;
+            --secondary-color: #00c9a7;
+            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
+            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --paid-color: #27ae60;
+            --archive-color: #95a5a6;
+            --admin-color: #00a6ca;
+            --supervisor-color: #f39c12;
+            --mandor-color: #2ecc71;
+            --login-color: #3498db;
+            --create-color: #2ecc71;
+            --update-color: #f39c12;
+            --delete-color: #e74c3c;
+            --view-color: #95a5a6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */        .sidebar.collapsed .menu-arrow {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            height: var(--header-height);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .datetime-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .datetime-display {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00a6ca;
+        }
+
+        .date-display {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--primary-color);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-filter {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn-reset {
+            padding: 10px 20px;
+            background: white;
+            color: #666;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Activity Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .stat-card.login {
+            border-top-color: var(--login-color);
+        }
+
+        .stat-card.create {
+            border-top-color: var(--create-color);
+        }
+
+        .stat-card.update {
+            border-top-color: var(--update-color);
+        }
+
+        .stat-card.delete {
+            border-top-color: var(--delete-color);
+        }
+
+        .stat-card.view {
+            border-top-color: var(--view-color);
+        }
+
+        .stat-title {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-change {
+            font-size: 11px;
+            color: #2ecc71;
+            margin-top: 5px;
+        }
+
+        /* Activity Table */
+        .activity-table-container {
+            overflow-x: auto;
+        }
+
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th {
+            text-align: left;
+            padding: 15px;
+            background-color: #f8f9fa;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .activity-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 13px;
+        }
+
+        .activity-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .user-info-small {
+            line-height: 1.3;
+        }
+
+        .user-name-small {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .user-role-small {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .role-badge.admin {
+            background: rgba(0, 166, 202, 0.1);
+            color: var(--admin-color);
+        }
+
+        .role-badge.supervisor {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--supervisor-color);
+        }
+
+        .role-badge.mandor {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--mandor-color);
+        }
+
+        .activity-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .activity-type.login {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--login-color);
+        }
+
+        .activity-type.create {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--create-color);
+        }
+
+        .activity-type.update {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--update-color);
+        }
+
+        .activity-type.delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--delete-color);
+        }
+
+        .activity-type.view {
+            background: rgba(149, 165, 166, 0.1);
+            color: var(--view-color);
+        }
+
+        .project-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            background: #f0f9fb;
+            color: var(--primary-color);
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .pagination-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .pagination-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Export Buttons */
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .btn-export {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export.excel {
+            background: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+        }
+
+        .btn-export.excel:hover {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-export.pdf {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+
+        .btn-export.pdf:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-actions {
+                justify-content: flex-end;
+            }
+
+            .toggle-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            width: 30px;
+            height: 30px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .menu-toggle svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 968px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .header-title {
+                font-size: 18px;
+                margin-right: auto;
+                margin-left: 10px;
+            }
+
+            .datetime-display {
+                font-size: 11px;
+            }
+
+            .date-display {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    {% include 'navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" onclick="toggleMobileMenu()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+            <h1 class="header-title">Log Aktivitas</h1>
+            <div class="datetime-info">
+                <div class="datetime-display" id="timeDisplay">00:00:00</div>
+                <div class="date-display" id="dateDisplay">Loading...</div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>Pilih User</label>
+                    <select id="filterUser" onchange="applyFilters()">
+                        <option value="all">Semua User</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Filter Role</label>
+                    <select id="filterRole" onchange="applyFilters()">
+                        <option value="all">Semua Role</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Supervisi">Supervisi</option>
+                        <option value="Mandor">Mandor</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Jenis Aktivitas</label>
+                    <select id="filterType" onchange="applyFilters()">
+                        <option value="all">Semua Aktivitas</option>
+                        <option value="login">Login</option>
+                        <option value="create">Tambah Data</option>
+                        <option value="update">Ubah Data</option>
+                        <option value="delete">Hapus Data</option>
+                        <option value="view">Lihat Data</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Dari Tanggal</label>
+                    <input type="date" id="startDate" value="2026-03-01" onchange="applyFilters()">
+                </div>
+                <div class="filter-group">
+                    <label>Sampai Tanggal</label>
+                    <input type="date" id="endDate" value="2026-03-31" onchange="applyFilters()">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn-filter" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3"></polygon>
+                        </svg>
+                        Terapkan Filter
+                    </button>
+                    <button class="btn-reset" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                        Reset
+                    </button>
+                    <div class="export-buttons">
+                        <button class="btn-export excel" onclick="exportToExcel()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="8" y1="13" x2="16" y2="13"></line>
+                                <line x1="8" y1="17" x2="12" y2="17"></line>
+                            </svg>
+                            Excel
+                        </button>
+                        <button class="btn-export pdf" onclick="exportToPDF()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="8" y1="13" x2="16" y2="13"></line>
+                                <line x1="8" y1="17" x2="12" y2="17"></line>
+                            </svg>
+                            PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Stats -->
+            <div class="stats-grid">
+                <div class="stat-card login">
+                    <div class="stat-title">Total Login</div>
+                    <div class="stat-value" id="totalLogin">156</div>
+                    <div class="stat-change">↑ 12% dari bulan lalu</div>
+                </div>
+                <div class="stat-card create">
+                    <div class="stat-title">Tambah Data</div>
+                    <div class="stat-value" id="totalCreate">89</div>
+                    <div class="stat-change">↑ 8% dari bulan lalu</div>
+                </div>
+                <div class="stat-card update">
+                    <div class="stat-title">Ubah Data</div>
+                    <div class="stat-value" id="totalUpdate">234</div>
+                    <div class="stat-change">↑ 15% dari bulan lalu</div>
+                </div>
+                <div class="stat-card delete">
+                    <div class="stat-title">Hapus Data</div>
+                    <div class="stat-value" id="totalDelete">23</div>
+                    <div class="stat-change">↓ 5% dari bulan lalu</div>
+                </div>
+                <div class="stat-card view">
+                    <div class="stat-title">Lihat Data</div>
+                    <div class="stat-value" id="totalView">567</div>
+                    <div class="stat-change">↑ 22% dari bulan lalu</div>
+                </div>
+            </div>
+
+            <!-- Activity Log Table -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Daftar Aktivitas User
+                </div>
+
+                <div class="activity-table-container">
+                    <table class="activity-table" id="activityTable">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Waktu</th>
+                                <th>Aktivitas</th>
+                                <th>Deskripsi</th>
+                                <th>IP Address</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityTableBody">
+                            <!-- Akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <div class="pagination-info" id="paginationInfo">
+                        Menampilkan 1 - 10 dari 45 data
+                    </div>
+                    <div class="pagination-controls" id="paginationControls">
+                        <button class="pagination-btn" id="prevPage" onclick="changePage('prev')" disabled>←</button>
+                        <button class="pagination-btn active" id="page1" onclick="goToPage(1)">1</button>
+                        <button class="pagination-btn" id="page2" onclick="goToPage(2)">2</button>
+                        <button class="pagination-btn" id="page3" onclick="goToPage(3)">3</button>
+                        <button class="pagination-btn" id="page4" onclick="goToPage(4)">4</button>
+                        <button class="pagination-btn" id="page5" onclick="goToPage(5)">5</button>
+                        <button class="pagination-btn" id="nextPage" onclick="changePage('next')">→</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== STATE ====================
+
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let totalItems = 0;
+        let totalPages = 1;
+
+        // ==================== UTILITY FUNCTIONS ====================
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        function toggleSubmenu(id, event) {
+            if (event) {
+                event.preventDefault();
+            }
+            const submenu = document.getElementById('submenu-' + id);
+            const arrow = document.getElementById('arrow-' + id);
+            if (submenu) {
+                submenu.classList.toggle('open');
+                if (arrow) {
+                    arrow.classList.toggle('rotated');
+                }
+            }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function confirmLogout(event) {
+            event.preventDefault();
+            if (!confirm('Apakah Anda yakin ingin logout?')) return;
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .finally(() => { window.location.href = '/login'; });
+        }
+
+        function setActiveMenuItem(element, menuId) {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            sessionStorage.setItem('activeMenu', menuId);
+        }
+
+        function setActiveSubmenu(element, submenuId) {
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            sessionStorage.setItem('activeSubmenu', submenuId);
+            return false;
+        }
+
+        // Format date
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(',', '');
+        }
+
+        // Get role badge class
+        function getRoleClass(role) {
+            switch ((role || '').toLowerCase()) {
+                case 'admin': return 'admin';
+                case 'supervisi': return 'supervisor';
+                case 'mandor': return 'mandor';
+                default: return 'admin';
+            }
+        }
+
+        // Get activity type class
+        function getActivityClass(type) {
+            switch ((type || '').toLowerCase()) {
+                case 'login': return 'login';
+                case 'create': return 'create';
+                case 'update': return 'update';
+                case 'delete': return 'delete';
+                case 'view': return 'view';
+                default: return 'view';
+            }
+        }
+
+        // Get activity icon
+        function getActivityIcon(type) {
+            switch ((type || '').toLowerCase()) {
+                case 'login':
+                    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>';
+                case 'create':
+                    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+                case 'update':
+                    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>';
+                case 'delete':
+                    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+                case 'view':
+                    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M22 12c-2.667 4.667-6 7-10 7s-7.333-2.333-10-7c2.667-4.667 6-7 10-7s7.333 2.333 10 7z"></path></svg>';
+                default:
+                    return '';
+            }
+        }
+
+        // ==================== DATA FETCHING ====================
+
+        async function fetchLogs() {
+            const username = document.getElementById('filterUser').value;
+            const role = document.getElementById('filterRole').value;
+            const type = document.getElementById('filterType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            let url = `/api/log?page=${currentPage}&per_page=${itemsPerPage}`;
+            if (username && username !== 'all') url += `&username=${encodeURIComponent(username)}`;
+            if (role && role !== 'all') url += `&role=${encodeURIComponent(role)}`;
+            if (type && type !== 'all') url += `&aksi=${encodeURIComponent(type)}`;
+            if (startDate) url += `&dari=${startDate}`;
+            if (endDate) url += `&ke=${endDate}`;
+
+            try {
+                const res = await fetch(url, { credentials: 'same-origin' });
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                const payload = await res.json();
+                
+                if (payload.success) {
+                    totalPages = payload.pages;
+                    totalItems = payload.total;
+                    
+                    renderActivityTable(payload.data);
+                    updateStats(payload.stats);
+                    renderPagination();
+                }
+            } catch (error) {
+                console.error("Gagal memanggil API Log Aktivitas", error);
+            }
+        }
+
+        async function fetchDropdownUsers() {
+            try {
+                const res = await fetch('/api/log/users', { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const payload = await res.json();
+                if (payload.success) {
+                    const filterUser = document.getElementById('filterUser');
+                    filterUser.innerHTML = '<option value="all">Semua User</option>';
+                    payload.data.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        filterUser.appendChild(opt);
+                    });
+                }
+            } catch(e) {}
+        }
+
+
+        // ==================== FILTER FUNCTIONS ====================
+
+        function applyFilters() {
+            currentPage = 1;
+            fetchLogs();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterUser').value = 'all';
+            document.getElementById('filterRole').value = 'all';
+            document.getElementById('filterType').value = 'all';
+            const now = new Date();
+            document.getElementById('startDate').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            document.getElementById('endDate').value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+            currentPage = 1;
+            fetchLogs();
+        }
+
+        // Update statistics cards
+        function updateStats(statsData) {
+            document.getElementById('totalLogin').textContent = statsData['login'] || 0;
+            document.getElementById('totalCreate').textContent = statsData['create'] || 0;
+            document.getElementById('totalUpdate').textContent = statsData['update'] || 0;
+            document.getElementById('totalDelete').textContent = statsData['delete'] || 0;
+            document.getElementById('totalView').textContent = statsData['view'] || 0;
+            
+            // Note: Perubahan % stat masih static karena butuh agregasi bulan sebelumnya pada API
+            // document.querySelectorAll('.stat-change').forEach(el => el.style.display = 'none');
+        }
+
+        // ==================== TABLE RENDERING ====================
+
+        function renderActivityTable(logs) {
+            const tbody = document.getElementById('activityTableBody');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 50px; color: #999;">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <p>Tidak ada aktivitas yang ditemukan</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            logs.forEach(log => {
+                const roleClass = getRoleClass(log.role);
+                const activityClass = getActivityClass(log.aksi);
+                const activityIcon = getActivityIcon(log.aksi);
+                const userAvatar = (log.nama && log.nama.length > 0) ? log.nama.substring(0, 2).toUpperCase() : 'U';
+
+                html += `
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar-small">${userAvatar}</div>
+                                <div class="user-info-small">
+                                    <div class="user-name-small">${log.nama}</div>
+                                    <div class="user-role-small">${log.role}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="role-badge ${roleClass}">${log.role}</span></td>
+                        <td><span class="timestamp">${formatDateTime(log.created_at)}</span></td>
+                        <td>
+                            <span class="activity-type ${activityClass}">
+                                ${activityIcon}
+                                ${log.aksi ? log.aksi.charAt(0).toUpperCase() + log.aksi.slice(1) : '-'}
+                            </span>
+                        </td>
+                        <td>
+                            ${log.deskripsi || '-'}
+                            ${log.modul ? `<span class="project-tag">${log.modul}</span>` : ''}
+                        </td>
+                        <td>${log.ip_address || '-'}</td>
+                        <td>-</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // ==================== PAGINATION ====================
+
+        function renderPagination() {
+            const paginationControls = document.getElementById('paginationControls');
+
+            // Clear existing page buttons (keep prev and next)
+            while (paginationControls.children.length > 2) {
+                paginationControls.removeChild(paginationControls.children[1]);
+            }
+
+            // Batasi jumlah page buttons yg dirender agar tidak memanjang jika ribuan page
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (endPage - startPage < 4) {
+                if (startPage === 1) endPage = Math.min(totalPages, 5);
+                else if (endPage === totalPages) startPage = Math.max(1, totalPages - 4);
+            }
+
+            // Tambahkan padding jika ada sisa slot page yg digantikan ellipsis (...)
+            if (startPage > 1) {
+                const btn = document.createElement('button');
+                btn.className = `pagination-btn`;
+                btn.textContent = '1';
+                btn.onclick = () => goToPage(1);
+                paginationControls.insertBefore(btn, document.getElementById('nextPage'));
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.innerHTML = '&nbsp;...&nbsp;';
+                    paginationControls.insertBefore(dots, document.getElementById('nextPage'));
+                }
+            }
+
+            // Add page buttons
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.className = `pagination-btn ${currentPage === i ? 'active' : ''}`;
+                btn.id = `page${i}`;
+                btn.textContent = i;
+                btn.onclick = () => goToPage(i);
+
+                // Insert before next button
+                paginationControls.insertBefore(btn, document.getElementById('nextPage'));
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const dots = document.createElement('span');
+                    dots.innerHTML = '&nbsp;...&nbsp;';
+                    paginationControls.insertBefore(dots, document.getElementById('nextPage'));
+                }
+                const btn = document.createElement('button');
+                btn.className = `pagination-btn`;
+                btn.textContent = totalPages;
+                btn.onclick = () => goToPage(totalPages);
+                paginationControls.insertBefore(btn, document.getElementById('nextPage'));
+            }
+
+            // Update prev/next buttons
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+
+            // Update info text
+            const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+            document.getElementById('paginationInfo').textContent =
+                `Menampilkan ${start} - ${end} dari ${totalItems} data`;
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 'next' && currentPage < totalPages) {
+                currentPage++;
+            }
+            fetchLogs();
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            fetchLogs();
+        }
+
+        // ==================== EXPORT FUNCTIONS ====================
+
+        function exportToExcel() {
+            alert('Export ke Excel akan segera tersedia!');
+            // Di sini nanti logic untuk export ke Excel
+        }
+
+        function exportToPDF() {
+            alert('Export ke PDF akan segera tersedia!');
+            // Di sini nanti logic untuk export ke PDF
+        }
+
+        // ==================== SIDEBAR PROJECTS ====================
+
+        async function renderSidebarProjects() {
+            const container = document.getElementById('dynamicProjects');
+            if (!container) return;
+
+            try {
+                const [resPo, resNonPo, resArchive] = await Promise.all([
+                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
+                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
+                ]);
+
+                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const dataPo = await resPo.json();
+                const dataNonPo = await resNonPo.json();
+                const dataArchive = await resArchive.json();
+                const allProjects = [
+                    ...(dataPo.success ? dataPo.data : []),
+                    ...(dataNonPo.success ? dataNonPo.data : []),
+                    ...(dataArchive.success ? dataArchive.data : [])
+                ];
+
+                const projectMap = new Map();
+                allProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    if (!projectName) return;
+                    if (!projectMap.has(projectName)) {
+                        projectMap.set(projectName, project);
+                    }
+                });
+
+                const uniqueProjects = [...projectMap.values()];
+                if (uniqueProjects.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let html = '';
+                uniqueProjects.forEach(project => {
+                    const projectName = project.project_name;
+                    const projectIdNumber = project.id;
+                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
+                    html += `
+                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span>${projectName}</span>
+                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div class="submenu" id="submenu-${projectId}">
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
+                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
+                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
+                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
+                    </div>
+                `;
+                });
+                container.innerHTML = html;
+
+                // Add event listeners after HTML is rendered
+                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        const arrow = this.querySelector('.menu-arrow');
+                        if (arrow && arrow.contains(e.target)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const projectSlug = this.getAttribute('data-project-slug');
+                            toggleSubmenu(projectSlug, e);
+                        } else {
+                            const projectId = this.getAttribute('data-project-id');
+                            setActiveMenuItem(this, 'project-' + projectId);
+                            window.location.href = '/dashboard/project/' + projectId;
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        window.onload = async function () {
+            const now = new Date();
+            document.getElementById('startDate').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            document.getElementById('endDate').value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+            await renderSidebarProjects();
+            fetchDropdownUsers();
+            fetchLogs();
+        };
+    </script>
+
+    <script>
+        // Update datetime display
+        function updateDateTime() {
+            const now = new Date();
+
+            // Format time: HH:MM:SS
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            // Format date: Hari, DD Bulan YYYY
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            const dayName = days[now.getDay()];
+            const date = String(now.getDate()).padStart(2, '0');
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            const dateString = `${dayName}, ${date} ${monthName} ${year}`;
+
+            // Update display
+            document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('dateDisplay').textContent = dateString;
+        }
+
+        // Update every second
+        setInterval(updateDateTime, 1000);
+        // Initial update
+        updateDateTime();
+    </script>
+</body>
+
+</html>

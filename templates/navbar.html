@@ -1,0 +1,1063 @@
+<aside class="sidebar" id="sidebar">
+    <script>
+        // Set state synchronously without any animations explicitly!
+        try {
+            if (localStorage.getItem('sidebarCollapsed') === '1') {
+                document.getElementById('sidebar').classList.add('collapsed');
+                // expand mainContent when the DOM is ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) mainContent.classList.add('expanded');
+                });
+            }
+        } catch(e) {}
+        
+        // Re-enable smooth transitions for future human clicks AFTER initial layout settles
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const sb = document.getElementById('sidebar');
+                if (sb) sb.classList.add('transitions-enabled');
+            }, 50);
+        });
+    </script>
+    <div class="sidebar-header">
+        <div class="sidebar-header-left">
+            <img src="/static/images/logo_ssm.png" alt="SSM Logo" class="sidebar-logo">
+            <div class="sidebar-title">SSM PORTAL</div>
+        </div>
+    </div>
+
+    <style>
+        /* ══════════════════════════════════════════
+           SIDEBAR GLOBAL LAYOUT & FIX
+        ══════════════════════════════════════════ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width, 280px);
+            height: 100vh;
+            background: #ffffff;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.07);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            will-change: width;
+        }
+
+        .sidebar.transitions-enabled {
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.35s ease;
+        }
+
+        .sidebar:not(.collapsed) {
+            box-shadow: 4px 0 28px rgba(0, 166, 202, 0.08);
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width, 70px);
+        }
+
+        /* ── Header ── */
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            border-bottom: 1px solid #e8e8e8;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 18px 0;
+            justify-content: center;
+        }
+
+        .sidebar-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .sidebar.transitions-enabled .sidebar-title {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+            opacity: 0;
+            display: none;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #555;
+        }
+
+        .sidebar.collapsed .toggle-btn {
+            transform: rotate(180deg);
+        }
+
+        .toggle-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .toggle-btn svg {
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px;
+            display: block;
+        }
+
+        /* ── Bottom Collapse Toggle ── */
+        .sidebar-collapse-btn {
+            flex-shrink: 0;
+            padding: 10px 14px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            background: white;
+        }
+
+        .sidebar.transitions-enabled .sidebar-collapse-btn {
+            transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed .sidebar-collapse-btn {
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        .collapse-toggle-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #e2e2e2;
+            background: transparent;
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #bbb;
+            transition: border-color 0.2s ease,
+                background 0.2s ease,
+                color 0.2s ease;
+        }
+
+        .collapse-toggle-btn:hover {
+            border-color: #00a6ca;
+            background: #f0fbfd;
+            color: #00a6ca;
+        }
+
+        .collapse-toggle-btn:active {
+            transform: scale(0.93);
+        }
+
+        .collapse-toggle-btn svg {
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px;
+            display: block;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed .collapse-toggle-btn svg {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 968px) {
+            .sidebar-collapse-btn {
+                display: none;
+            }
+        }
+
+        /* ── Menu ── */
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 20px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* ── Menu Item ── */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: background-color 0.22s ease, color 0.22s ease,
+                border-color 0.22s ease, transform 0.22s ease;
+            will-change: transform, background-color;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            background-color: #f0fbfd;
+            color: #00a6ca;
+            border-left-color: #00a6ca;
+            transform: translateX(2px);
+        }
+
+        .menu-item.active {
+            background-color: #e8f8fc;
+            color: #00a6ca;
+            border-left-color: #00a6ca;
+            transform: translateX(1px);
+        }
+
+        /* ── ICON (SVG pertama dalam menu-item) ── */
+        .menu-item>svg:first-of-type {
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px !important;
+            max-width: 20px !important;
+            flex-shrink: 0;
+            display: block !important;
+        }
+
+        .menu-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.2s ease, width 0.3s ease;
+            white-space: nowrap;
+        }
+
+        /* ── Arrow ── */
+        .menu-arrow {
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
+            max-width: 16px !important;
+            flex-shrink: 0;
+            transition: transform 0.25s ease, opacity 0.2s ease;
+        }
+
+        .menu-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        /* ══════════════════════════════════════════
+           COLLAPSED STATE — FIX UTAMA
+        ══════════════════════════════════════════ */
+        .sidebar.collapsed .menu-item {
+            justify-content: center;
+            padding: 14px 0;
+            gap: 0;
+            border-left-color: transparent !important;
+            transform: none !important;
+        }
+
+        .sidebar.collapsed .menu-item:hover {
+            background-color: #f0fbfd;
+            color: #00a6ca;
+            border-left-color: transparent !important;
+            transform: none !important;
+        }
+
+        .sidebar.collapsed .menu-item.active {
+            background-color: #e8f8fc;
+            color: #00a6ca;
+            border-left-color: transparent !important;
+            transform: none !important;
+        }
+
+        /* Sembunyikan teks dan arrow saat collapsed */
+        .sidebar.collapsed .menu-item span {
+            display: none !important;
+            width: 0 !important;
+            opacity: 0 !important;
+        }
+
+        .sidebar.collapsed .menu-arrow {
+            display: none !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            opacity: 0 !important;
+        }
+
+        /* Pastikan icon tetap tampil dan ter-center saat collapsed */
+        .sidebar.collapsed .menu-item>svg:first-of-type {
+            display: block !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* ── Submenu ── */
+        .sidebar:not(.collapsed) .submenu {
+            display: block;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateY(-4px);
+            transition: max-height 0.3s ease, opacity 0.22s ease, transform 0.22s ease;
+            will-change: max-height, opacity, transform;
+        }
+
+        .sidebar:not(.collapsed) .submenu.open {
+            max-height: 350px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+            max-height: 0 !important;
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        .submenu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px 9px 52px;
+            color: #666;
+            font-size: 13px;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: background-color 0.22s ease, color 0.22s ease,
+                border-color 0.22s ease, opacity 0.22s ease, transform 0.22s ease;
+            opacity: 0;
+            transform: translateY(-6px);
+            will-change: opacity, transform;
+            pointer-events: auto;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+        }
+
+        .submenu-item svg {
+            width: 14px !important;
+            height: 14px !important;
+            min-width: 14px !important;
+            flex-shrink: 0;
+        }
+
+        .submenu.open .submenu-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .submenu-item:hover {
+            background-color: #f0fbfd;
+            color: #00a6ca;
+            border-left-color: #00a6ca;
+            transform: translateX(2px);
+        }
+
+        .submenu-item.active {
+            background-color: #e8f8fc;
+            color: #00a6ca;
+            border-left-color: #00a6ca;
+            transform: translateX(1px);
+        }
+
+        /* Staggered animation open */
+        .submenu.open .submenu-item:nth-child(1) {
+            transition-delay: 0.02s;
+        }
+
+        .submenu.open .submenu-item:nth-child(2) {
+            transition-delay: 0.05s;
+        }
+
+        .submenu.open .submenu-item:nth-child(3) {
+            transition-delay: 0.08s;
+        }
+
+        .submenu.open .submenu-item:nth-child(4) {
+            transition-delay: 0.11s;
+        }
+
+        .submenu.open .submenu-item:nth-child(5) {
+            transition-delay: 0.14s;
+        }
+
+        .submenu.open .submenu-item:nth-child(6) {
+            transition-delay: 0.17s;
+        }
+
+        /* Staggered animation close */
+        .submenu:not(.open) .submenu-item:nth-child(1) {
+            transition-delay: 0.17s;
+        }
+
+        .submenu:not(.open) .submenu-item:nth-child(2) {
+            transition-delay: 0.14s;
+        }
+
+        .submenu:not(.open) .submenu-item:nth-child(3) {
+            transition-delay: 0.11s;
+        }
+
+        .submenu:not(.open) .submenu-item:nth-child(4) {
+            transition-delay: 0.08s;
+        }
+
+        .submenu:not(.open) .submenu-item:nth-child(5) {
+            transition-delay: 0.05s;
+        }
+
+        .submenu:not(.open) .submenu-item:nth-child(6) {
+            transition-delay: 0.02s;
+        }
+
+        /* ── Nested Submenu (Level 3) ── */
+        .submenu .menu-item {
+            border-left: none;
+        }
+
+        .submenu .menu-item:hover {
+            border-left: none;
+        }
+
+        .submenu .submenu {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.22s ease;
+        }
+
+        .submenu .submenu.open {
+            max-height: 200px;
+            opacity: 1;
+        }
+
+        .sidebar.collapsed .submenu .submenu {
+            display: none !important;
+        }
+
+        /* ── User Profile Section ── */
+        .sidebar-user-profile {
+            flex-shrink: 0;
+            padding: 16px 20px;
+            border-top: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-user-profile {
+            padding: 15px 0;
+            justify-content: center;
+        }
+
+        .user-profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .user-profile-info {
+            flex: 1;
+            min-width: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .user-profile-info {
+            opacity: 0;
+            display: none;
+        }
+
+        .user-profile-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-profile-role {
+            font-size: 12px;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-profile-logout {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #e74c3c;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed .user-profile-logout {
+            display: none !important;
+        }
+
+        .user-profile-logout:hover {
+            background-color: #fef5f5;
+        }
+
+        .user-profile-logout svg {
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px;
+            display: block;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 968px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width, 280px) !important;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* ── Tooltip saat collapsed ── */
+        .sidebar.collapsed .menu-item {
+            position: relative;
+        }
+
+        .sidebar.collapsed .menu-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #333;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 999;
+        }
+
+        .sidebar.collapsed .menu-item:hover::after {
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+        function toggleSubmenu(id, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const submenu = document.getElementById('submenu-' + id);
+            const arrow = document.getElementById('arrow-' + id);
+            if (submenu) submenu.classList.toggle('open');
+            if (arrow) arrow.classList.toggle('rotated');
+        }
+
+        function setActiveMenuItem(element, menuId) {
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if (element && typeof element === 'object') {
+                element.classList.add('active');
+            }
+            sessionStorage.setItem('activeMenu', menuId);
+        }
+
+        function setActiveSubmenu(element, submenuId) {
+            try {
+                document.querySelectorAll('.submenu-item').forEach(item => item.classList.remove('active'));
+                if (element && typeof element === 'object') {
+                    element.classList.add('active');
+                }
+                sessionStorage.setItem('activeSubmenu', submenuId);
+            } catch (error) {
+                console.error('Error in setActiveSubmenu:', error);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            if (sidebar) sidebar.classList.toggle('collapsed');
+            if (mainContent) mainContent.classList.toggle('expanded');
+            const isCollapsed = sidebar && sidebar.classList.contains('collapsed');
+            try { localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0'); } catch (e) { }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('open');
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && window.innerWidth <= 968) {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        function getCurrentProjectIdFromUrl() {
+            try {
+                const pathMatch = window.location.pathname.match(/^\/dashboard\/project\/(\d+)/);
+                if (pathMatch && pathMatch[1]) return Number(pathMatch[1]);
+                const scopedProjectMatch = window.location.pathname.match(/^\/project\/(\d+)\//);
+                if (scopedProjectMatch && scopedProjectMatch[1]) return Number(scopedProjectMatch[1]);
+                const queryId = Number(new URLSearchParams(window.location.search).get('project_id') || 0);
+                return queryId || null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function setProjectMenuOpen(projectSlug, shouldOpen) {
+            const submenu = document.getElementById('submenu-' + projectSlug);
+            const arrow = document.getElementById('arrow-' + projectSlug);
+            if (submenu) submenu.classList.toggle('open', !!shouldOpen);
+            if (arrow) arrow.classList.toggle('rotated', !!shouldOpen);
+            if (shouldOpen) {
+                sessionStorage.setItem('openProjectSlug', projectSlug);
+            } else if (sessionStorage.getItem('openProjectSlug') === projectSlug) {
+                sessionStorage.removeItem('openProjectSlug');
+            }
+        }
+
+        function confirmLogout(event) {
+            event.preventDefault();
+            if (!confirm('Apakah Anda yakin ingin logout?')) return;
+            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+                .finally(() => { window.location.href = '/login'; });
+        }
+
+        function applySidebarEvents() {
+            document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
+                // Hapus old listener kl udh dipanggil 2x
+                const newClone = item.cloneNode(true);
+                if(item.parentNode) item.parentNode.replaceChild(newClone, item);
+                
+                newClone.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const projectSlug = this.getAttribute('data-project-slug');
+                    const projectId = this.getAttribute('data-project-id');
+                    const submenu = document.getElementById('submenu-' + projectSlug);
+                    const isOpen = submenu ? submenu.classList.contains('open') : false;
+                    setProjectMenuOpen(projectSlug, !isOpen);
+                    setActiveMenuItem(this, 'project-' + projectId);
+                });
+            });
+
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                const newClone = item.cloneNode(true);
+                if(item.parentNode) item.parentNode.replaceChild(newClone, item);
+
+                newClone.addEventListener('click', function (e) {
+                    const parentSubmenu = this.closest('.submenu');
+                    if (parentSubmenu && parentSubmenu.id && parentSubmenu.id.startsWith('submenu-')) {
+                        const projectSlug = parentSubmenu.id.replace('submenu-', '').replace('overhead-', '');
+                        sessionStorage.setItem('openProjectSlug', projectSlug);
+                    }
+                    if (this.getAttribute('href') === '#') {
+                        e.preventDefault();
+                    }
+                    if (window.innerWidth <= 968) {
+                        closeMobileMenu();
+                    }
+                });
+            });
+        }
+
+        function buildSidebarHTML(allProjects) {
+            const container = document.getElementById('dynamicProjects');
+            if (!container) return;
+
+            const currentPath = window.location.pathname;
+            const currentProjectIdFromUrl = getCurrentProjectIdFromUrl();
+
+            const projectMap = new Map();
+            allProjects.forEach(project => {
+                const projectName = project.project_name;
+                if (!projectName) return;
+                if (!projectMap.has(projectName)) {
+                    projectMap.set(projectName, project);
+                }
+            });
+
+            const uniqueProjects = [...projectMap.values()];
+            if (uniqueProjects.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let savedOpenSlug = sessionStorage.getItem('openProjectSlug') || null;
+            let slugToOpen = savedOpenSlug;
+
+            if (currentProjectIdFromUrl) {
+                const activeProj = uniqueProjects.find(p => Number(p.id) === Number(currentProjectIdFromUrl));
+                if (activeProj && activeProj.project_name) {
+                    slugToOpen = activeProj.project_name.toLowerCase().replace(/\s+/g, '-');
+                }
+            }
+
+            if (slugToOpen) {
+                sessionStorage.setItem('openProjectSlug', slugToOpen);
+            }
+
+            let html = '';
+            uniqueProjects.forEach(project => {
+                const projectName = project.project_name;
+                const projectIdNumber = project.id;
+                const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
+                const isCurrentProject = Number(currentProjectIdFromUrl) === Number(projectIdNumber);
+                
+                const dashboardActiveClass = currentPath.startsWith('/dashboard/project/') && isCurrentProject ? ' active' : '';
+                const jasaActiveClass = currentPath.startsWith('/project/') && currentPath.includes('/jasa') && isCurrentProject ? ' active' : '';
+                const materialActiveClass = currentPath.startsWith('/material') && isCurrentProject ? ' active' : '';
+                const overheadActiveClass = currentPath.startsWith('/project/') && currentPath.includes('/overhead') && isCurrentProject ? ' active' : '';
+                const kasbonActiveClass = currentPath.startsWith('/verifikasi-kasbon') && isCurrentProject ? ' active' : '';
+                const pettyCashActiveClass = currentPath.startsWith('/petty-cash') && isCurrentProject ? ' active' : '';
+
+                const isMainFolderOpen = (slugToOpen === projectId) ? ' open' : '';
+                const isMainArrowRotated = (slugToOpen === projectId) ? ' rotated' : '';
+                
+                const isOverheadPage = currentPath.includes('/overhead') || currentPath.startsWith('/verifikasi-kasbon');
+                const isOverheadFolderOpen = (slugToOpen === projectId && isOverheadPage) ? ' open' : '';
+                const isOverheadArrowRotated = (slugToOpen === projectId && isOverheadPage) ? ' rotated' : '';
+
+                const mainActive = isCurrentProject ? ' active' : '';
+
+                html += `
+                <div class="menu-item${mainActive}" data-project-id="${projectIdNumber}" data-project-slug="${projectId}" data-tooltip="${projectName}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>${projectName}</span>
+                    <svg class="menu-arrow${isMainArrowRotated}" id="arrow-${projectId}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+                <div class="submenu${isMainFolderOpen}" id="submenu-${projectId}">
+                    <a href="/dashboard/project/${projectIdNumber}" class="submenu-item level-2${dashboardActiveClass}" onclick="setActiveSubmenu(this, 'dashboard'); closeMobileMenu();">Dashboard</a>
+                    <a href="/project/${projectIdNumber}/jasa" class="submenu-item level-2${jasaActiveClass}" onclick="setActiveSubmenu(this, 'jasa'); closeMobileMenu();">Jasa</a>
+                    <a href="/material?project_id=${projectIdNumber}" class="submenu-item level-2${materialActiveClass}" onclick="setActiveSubmenu(this, 'material'); closeMobileMenu();">Material</a>
+                    <div class="menu-item" data-tooltip="Overhead" style="padding-left: 52px; font-size: 13px; color: #666;" onclick="event.stopPropagation(); toggleSubmenu('overhead-${projectId}');">
+                        <span>Overhead</span>
+                        <svg class="menu-arrow${isOverheadArrowRotated}" id="arrow-overhead-${projectId}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                    <div class="submenu${isOverheadFolderOpen}" id="submenu-overhead-${projectId}" style="padding-left: 20px;">
+                        <a href="/project/${projectIdNumber}/overhead" class="submenu-item level-2${overheadActiveClass}" style="padding-left: 75px;" onclick="setActiveSubmenu(this, 'overhead-progress'); closeMobileMenu();">Progress</a>
+                        <a href="/verifikasi-kasbon?project_id=${projectIdNumber}" class="submenu-item level-2${kasbonActiveClass}" style="padding-left: 75px;" onclick="setActiveSubmenu(this, 'kasbon-mandor'); closeMobileMenu();">Kasbon Mandor</a>
+                    </div>
+                    <a href="/petty-cash?project_id=${projectIdNumber}" class="submenu-item level-2${pettyCashActiveClass}" onclick="setActiveSubmenu(this, 'petty-cash'); closeMobileMenu();">Petty Cash</a>
+                </div>
+                `;
+            });
+
+            // Prevent transitions on initial render to stop blinking
+            container.classList.add('disable-transitions');
+            container.innerHTML = html;
+            
+            // Force browser repaint to recognize DOM insertion before enabling transition
+            void container.offsetHeight; 
+            
+            container.classList.remove('disable-transitions');
+
+            applySidebarEvents();
+        }
+
+        async function renderSidebarProjects() {
+            const cachedDataStr = sessionStorage.getItem('cachedSidebarProjects');
+
+            try {
+                // Fetch fresh data in the background
+                const [resPo, resNonPo] = await Promise.all([
+                    fetch('/api/projects?type=po&status=active', { credentials: 'same-origin' }),
+                    fetch('/api/projects?type=non_po&status=active', { credentials: 'same-origin' })
+                ]);
+
+                if (resPo.status === 401 || resNonPo.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const dataPo = await resPo.json();
+                const dataNonPo = await resNonPo.json();
+                const allProjects = [
+                    ...(dataPo.success ? dataPo.data : []),
+                    ...(dataNonPo.success ? dataNonPo.data : [])
+                ];
+
+                const newlyFetchedDataStr = JSON.stringify(allProjects);
+                
+                // If the data has changed (or no cache), we rebuild the UI
+                if (newlyFetchedDataStr !== cachedDataStr) {
+                    sessionStorage.setItem('cachedSidebarProjects', newlyFetchedDataStr);
+                    buildSidebarHTML(allProjects);
+                }
+
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        // Tutup sidebar saat klik di luar (mobile)
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.toggle-btn');
+            if (window.innerWidth <= 968) {
+                if (sidebar && menuToggle &&
+                    !sidebar.contains(event.target) &&
+                    !menuToggle.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderSidebarProjects();
+        });
+    </script>
+
+    <nav class="sidebar-menu" id="sidebarMenu">
+
+        <!-- Master PO -->
+        <div class="menu-item {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}active{% endif %}" data-tooltip="Master PO"
+            onclick="toggleSubmenu('master-po'); setActiveMenuItem(this, 'master-po')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <span>Master PO</span>
+            <svg class="menu-arrow {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}rotated{% endif %}" id="arrow-master-po" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </div>
+        <div class="submenu {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}open{% endif %}" id="submenu-master-po">
+            <a href="/project-po" class="submenu-item level-2 {% if request.path.startswith('/project-po') %}active{% endif %}"
+                onclick="setActiveSubmenu(this, 'project-po'); closeMobileMenu();">Project PO</a>
+            <a href="/project-non-po" class="submenu-item level-2 {% if request.path.startswith('/project-non-po') %}active{% endif %}"
+                onclick="setActiveSubmenu(this, 'project-non-po'); closeMobileMenu();">Project NON-PO</a>
+        </div>
+
+        <!-- Overhead Kantor -->
+        <a href="/overhead" class="menu-item {% if request.path == '/overhead' %}active{% endif %}" data-tooltip="Overhead Kantor"
+            onclick="setActiveMenuItem(this, 'overhead')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span>Overhead Kantor</span>
+        </a>
+
+        <!-- Invoice -->
+        <a href="/invoice" class="menu-item {% if request.path == '/invoice' %}active{% endif %}" data-tooltip="Invoice" onclick="setActiveMenuItem(this, 'invoice')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <line x1="8" y1="10" x2="16" y2="10"></line>
+                <line x1="8" y1="14" x2="12" y2="14"></line>
+            </svg>
+            <span>Invoice</span>
+        </a>
+
+        <!-- Dynamic Projects (diisi via JavaScript) -->
+        <div id="dynamicProjects"></div>
+        <script>
+            // Synchronous execution to prevent Layout Shift & Blinking!
+            (function() {
+                const cachedDataStr = sessionStorage.getItem('cachedSidebarProjects');
+                if (cachedDataStr) {
+                    try {
+                        const cachedData = JSON.parse(cachedDataStr);
+                        // Temporarily set a hard disable-transition variable to stop child items from animating on parse
+                        document.body.classList.add('no-transition');
+                        if (typeof buildSidebarHTML === 'function') {
+                            buildSidebarHTML(cachedData);
+                        }
+                    } catch(e) {}
+                }
+            })();
+        </script>
+
+        <!-- Absen -->
+        <a href="/absen" class="menu-item {% if request.path == '/absen' %}active{% endif %}" data-tooltip="Absen" onclick="setActiveMenuItem(this, 'absen')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M5.37 20c.92-3 4.29-4 6.63-4s5.71 1 6.63 4"></path>
+            </svg>
+            <span>Absen</span>
+        </a>
+
+        <!-- Arsip is already processed... -->
+        <div class="menu-item {% if request.path.startswith('/arsip') %}active{% endif %}" data-tooltip="Arsip" onclick="toggleSubmenu('arsip'); setActiveMenuItem(this, 'arsip')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+            <span>Arsip</span>
+            <svg class="menu-arrow {% if request.path.startswith('/arsip') %}rotated{% endif %}" id="arrow-arsip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </div>
+        <div class="submenu {% if request.path.startswith('/arsip') %}open{% endif %}" id="submenu-arsip">
+            <a href="/arsip" class="submenu-item level-2 {% if request.path == '/arsip' %}active{% endif %}"
+                onclick="setActiveSubmenu(this, 'arsip-beranda'); closeMobileMenu();">
+                Beranda
+            </a>
+            <a href="/arsip/invoice" class="submenu-item level-2 {% if request.path.startswith('/arsip/invoice') %}active{% endif %}"
+                onclick="setActiveSubmenu(this, 'arsip-invoice'); closeMobileMenu();">
+                Arsip Invoice
+            </a>
+            <a href="/arsip/project" class="submenu-item level-2 {% if request.path.startswith('/arsip/project') %}active{% endif %}"
+                onclick="setActiveSubmenu(this, 'arsip-project'); closeMobileMenu();">
+                Arsip Project
+            </a>
+        </div>
+
+        <!-- Log Aktivitas -->
+        <a href="/log-aktivitas" class="menu-item {% if request.path == '/log-aktivitas' %}active{% endif %}" data-tooltip="Log Aktivitas"
+            onclick="setActiveMenuItem(this, 'log-aktivitas')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Log Aktivitas</span>
+        </a>
+
+        <!-- Profile -->
+        <a href="/profile" class="menu-item {% if request.path == '/profile' %}active{% endif %}" data-tooltip="Profile" onclick="setActiveMenuItem(this, 'profile')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Profile</span>
+        </a>
+
+        <!-- Setting -->
+        <a href="/setting" class="menu-item {% if request.path == '/setting' %}active{% endif %}" data-tooltip="Setting" onclick="setActiveMenuItem(this, 'setting')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+            </svg>
+            <span>Setting</span>
+        </a>
+
+    </nav>
+
+    <!-- Collapse Toggle Bottom -->
+    <div class="sidebar-collapse-btn">
+        <button class="collapse-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Tutup/Buka Sidebar">
+            <!-- Icon panel-left-close (berubah saat collapsed via CSS rotate) -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18" />
+                <polyline points="15 9 12 12 15 15" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- User Profile Section -->
+    <div class="sidebar-user-profile">
+        <div class="user-profile-avatar">{{ (current_user.nama or 'U')[:2]|upper }}</div>
+        <div class="user-profile-info">
+            <div class="user-profile-name">{{ current_user.nama or 'User' }}</div>
+            <div class="user-profile-role">{{ current_user.role or 'User' }}</div>
+        </div>
+        <button class="user-profile-logout" onclick="confirmLogout(event)" title="Logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Synchronous state restore to prevent blinking -->
+    <style>.no-transition * { transition: none !important; }</style>
+    <script>
+        (function() {
+            document.body.classList.add('no-transition');
+
+            // Hapus blok pengecekan URL javascript manual
+            // Transisi dan deteksi navbar sekarang ditangani 100% oleh Jinja Backend Rendering (e.g. request.path)
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    document.body.classList.remove('no-transition');
+                });
+            });
+        })();
+    </script>
+</aside>
