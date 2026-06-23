@@ -14,14 +14,14 @@
         }
 
         :root {
-            --primary-color: #00a6ca;
-            --secondary-color: #00c9a7;
-            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --primary-color: #1a1a1a;
+            --secondary-color: #4a4a4a;
+            --gradient: #1a1a1a;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
-            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
-            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --card-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+            --hover-shadow: 0 4px 12px 0 rgba(67, 89, 113, 0.16);
             --success-color: #2ecc71;
             --warning-color: #f39c12;
             --danger-color: #e74c3c;
@@ -30,7 +30,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
+            background-color: #f5f5f9;
             color: #333;
             overflow-x: hidden;
         }
@@ -92,7 +92,7 @@
         .toggle-btn {
             width: 30px;
             height: 30px;
-            background: var(--gradient);
+            background: #ffffff;
             border: none;
             border-radius: 8px;
             color: white;
@@ -227,7 +227,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--gradient);
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -693,7 +693,7 @@
         }
 
         .btn-primary {
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
         }
 
@@ -770,7 +770,7 @@
 
         .modal-header {
             padding: 15px 20px;
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
             display: flex;
             justify-content: space-between;
@@ -894,7 +894,7 @@
             font-size: 14px;
             font-weight: 600;
             border-radius: 30px;
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
             border: none;
             cursor: pointer;
@@ -1194,10 +1194,25 @@
                 </svg>
             </button>
             <h1 class="header-title">Laporan Kegiatan</h1>
-            <div class="user-info" onclick="window.location.href='profile-supervisi.html'">
-                <div class="user-avatar">SP</div>
-                <span class="user-name">Supervisor Proyek</span>
+            
+        
+            <div class="header-right-group" style="display: flex; align-items: center; gap: 20px;">
+                <div class="user-profile-header">
+                    <div class="user-profile-avatar-header">{{ (current_user.nama or 'U')[:2]|upper }}</div>
+                    <div class="user-profile-info-header">
+                        <div class="user-profile-name-header">{{ current_user.nama or 'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role or 'User' }}</div>
+                    </div>
+                    <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
+
         </header>
 
         <!-- Content -->

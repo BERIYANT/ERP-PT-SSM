@@ -224,39 +224,45 @@
         }
 
         /* ── Menu Item ── */
+        
+
+        
+
+        
+
+        /* ── ICON (SVG pertama dalam menu-item) ── */
+        
         .menu-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 20px;
+            padding: 10px 16px;
             cursor: pointer;
-            color: #555;
-            font-size: 14px;
+            color: #697a8d;
+            font-size: 15px;
             font-weight: 500;
             text-decoration: none;
-            border-left: 3px solid transparent;
-            transition: background-color 0.22s ease, color 0.22s ease,
-                border-color 0.22s ease, transform 0.22s ease;
-            will-change: transform, background-color;
+            border-radius: 6px;
+            margin: 0 12px 4px 12px;
+            transition: all 0.2s ease;
             white-space: nowrap;
-            overflow: hidden;
+            border-right: 4px solid transparent;
         }
 
         .menu-item:hover {
-            background-color: #f0fbfd;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            background-color: rgba(26, 26, 26, 0.05);
+            color: #1a1a1a;
             transform: translateX(2px);
         }
 
         .menu-item.active {
-            background-color: #e8f8fc;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            background-color: rgba(26, 26, 26, 0.16) !important;
+            color: #1a1a1a !important;
+            border-right: 4px solid #1a1a1a !important;
+            font-weight: 600;
             transform: translateX(1px);
         }
 
-        /* ── ICON (SVG pertama dalam menu-item) ── */
         .menu-item>svg:first-of-type {
             width: 20px !important;
             height: 20px !important;
@@ -291,27 +297,11 @@
         /* ══════════════════════════════════════════
            COLLAPSED STATE — FIX UTAMA
         ══════════════════════════════════════════ */
-        .sidebar.collapsed .menu-item {
-            justify-content: center;
-            padding: 14px 0;
-            gap: 0;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
-        .sidebar.collapsed .menu-item:hover {
-            background-color: #f0fbfd;
-            color: #00a6ca;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
-        .sidebar.collapsed .menu-item.active {
-            background-color: #e8f8fc;
-            color: #00a6ca;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
         /* Sembunyikan teks dan arrow saat collapsed */
         .sidebar.collapsed .menu-item span {
@@ -328,7 +318,39 @@
         }
 
         /* Pastikan icon tetap tampil dan ter-center saat collapsed */
-        .sidebar.collapsed .menu-item>svg:first-of-type {
+        .sidebar.collapsed 
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            color: #697a8d;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 0 12px 4px 12px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border-right: 4px solid transparent;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(26, 26, 26, 0.05);
+            color: #1a1a1a;
+            transform: translateX(2px);
+        }
+
+        .menu-item.active {
+            background-color: rgba(26, 26, 26, 0.16) !important;
+            color: #1a1a1a !important;
+            border-right: 4px solid #1a1a1a !important;
+            font-weight: 600;
+            transform: translateX(1px);
+        }
+
+        .menu-item>svg:first-of-type {
             display: block !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
@@ -455,13 +477,9 @@
         }
 
         /* ── Nested Submenu (Level 3) ── */
-        .submenu .menu-item {
-            border-left: none;
-        }
+        .submenu 
 
-        .submenu .menu-item:hover {
-            border-left: none;
-        }
+        .submenu 
 
         .submenu .submenu {
             max-height: 0;
@@ -479,83 +497,7 @@
             display: none !important;
         }
 
-        /* ── User Profile Section ── */
-        .sidebar-user-profile {
-            flex-shrink: 0;
-            padding: 16px 20px;
-            border-top: 1px solid #e8e8e8;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar.collapsed .sidebar-user-profile {
-            padding: 15px 0;
-            justify-content: center;
-        }
-
-        .user-profile-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .user-profile-info {
-            flex: 1;
-            min-width: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar.collapsed .user-profile-info {
-            opacity: 0;
-            display: none;
-        }
-
-        .user-profile-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-profile-role {
-            font-size: 12px;
-            color: #999;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-profile-logout {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            color: #e74c3c;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .sidebar.collapsed .user-profile-logout {
-            display: none !important;
-        }
+        
 
         .user-profile-logout:hover {
             background-color: #fef5f5;
@@ -581,9 +523,7 @@
         }
 
         /* ── Tooltip saat collapsed ── */
-        .sidebar.collapsed .menu-item {
-            position: relative;
-        }
+        .sidebar.collapsed 
 
         .sidebar.collapsed .menu-item::after {
             content: attr(data-tooltip);
@@ -607,7 +547,77 @@
         .sidebar.collapsed .menu-item:hover::after {
             opacity: 1;
         }
-    </style>
+            /* ── User Profile Header (Top Navbar) ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .user-profile-avatar-header {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .user-profile-info-header {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-profile-name-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-profile-role-header {
+            font-size: 11px;
+            color: #666;
+        }
+        .user-profile-logout-header {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: #e74c3c;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .user-profile-logout-header:hover {
+            background-color: #fee9e7;
+        }
+        .user-profile-logout-header svg {
+            width: 18px;
+            height: 18px;
+        }
+
+</style>
 
     <script>
         function toggleSubmenu(id, event) {
@@ -1028,24 +1038,80 @@
         </button>
     </div>
 
-    <!-- User Profile Section -->
-    <div class="sidebar-user-profile">
-        <div class="user-profile-avatar">{{ (current_user.nama or 'U')[:2]|upper }}</div>
-        <div class="user-profile-info">
-            <div class="user-profile-name">{{ current_user.nama or 'User' }}</div>
-            <div class="user-profile-role">{{ current_user.role or 'User' }}</div>
-        </div>
-        <button class="user-profile-logout" onclick="confirmLogout(event)" title="Logout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-        </button>
-    </div>
+    
 
     <!-- Synchronous state restore to prevent blinking -->
-    <style>.no-transition * { transition: none !important; }</style>
+    <style>.no-transition * { transition: none !important; }        /* ── User Profile Header (Top Navbar) ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .user-profile-avatar-header {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .user-profile-info-header {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-profile-name-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-profile-role-header {
+            font-size: 11px;
+            color: #666;
+        }
+        .user-profile-logout-header {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: #e74c3c;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .user-profile-logout-header:hover {
+            background-color: #fee9e7;
+        }
+        .user-profile-logout-header svg {
+            width: 18px;
+            height: 18px;
+        }
+
+</style>
     <script>
         (function() {
             document.body.classList.add('no-transition');
