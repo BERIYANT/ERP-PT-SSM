@@ -14,9 +14,9 @@
         }
 
         :root {
-            --primary-color: #1a1a1a;
-            --secondary-color: #4a4a4a;
-            --gradient: #1a1a1a;
+            --primary-color: #125BFB;
+            --secondary-color: #125BFB;
+            --gradient: #125BFB;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
@@ -770,32 +770,10 @@
         let openCustomers = {};
 
         // Fungsi untuk set active menu item (background biru permanen)
-        function setActiveMenuItem(element, menuId) {
-            // Hapus class active dari semua menu item
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Tambah class active ke elemen yang diklik
-            element.classList.add('active');
-
-            // Simpan ke localStorage atau session (opsional)
-            sessionStorage.setItem('activeMenu', menuId);
-        }
+        
 
         // Fungsi untuk set active submenu item (teks biru permanen)
-        function setActiveSubmenu(element, submenuId) {
-            // Hapus class active dari semua submenu item
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Tambah class active ke elemen yang diklik
-            element.classList.add('active');
-
-            // Simpan ke localStorage atau session (opsional)
-            sessionStorage.setItem('activeSubmenu', submenuId);
-        }
+        
 
         // Fungsi untuk restore active state dari session (saat halaman dimuat)
         function restoreActiveState() {
@@ -828,43 +806,16 @@
         }
 
         // Toggle Sidebar
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
+        
 
         // Toggle Submenu
-        function toggleSubmenu(id, event) {
-            if (event) {
-                event.preventDefault();
-            }
-
-            const submenu = document.getElementById('submenu-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-
-            if (submenu) {
-                submenu.classList.toggle('open');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        }
+        
 
         // Toggle Mobile Menu
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
+        
 
         // Confirm Logout
-        function confirmLogout(event) {
-            event.preventDefault();
-            if (!confirm('Apakah Anda yakin ingin logout?')) return;
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-                .finally(() => { window.location.href = '/login'; });
-        }
+        
 
         // Switch Tab
         function switchTab(tab) {
@@ -1024,7 +975,7 @@
                 projects.push({ id: p.id, customerId: p.customer_id, poNumber: p.po_number, poDate: p.po_date, description: p.description, amount: p.amount, projectName: p.project_name, status: 'active' });
                 openCustomers[selectedCustomerId] = true;
                 renderProjectTable();
-                renderSidebarProjects();
+                
                 document.getElementById('poNumber').value = '';
                 document.getElementById('poDate').value = '';
                 document.getElementById('poDescription').value = '';
@@ -1075,7 +1026,7 @@
                 project.amount = parseFloat(newAmount);
                 project.projectName = newProjectName;
                 renderProjectTable();
-                renderSidebarProjects();
+                
             } else {
                 alert(data.message || 'Gagal mengubah project');
             }
@@ -1097,7 +1048,7 @@
                     projects.splice(idx, 1);
                     renderProjectTable();
                     renderArchiveTable();
-                    renderSidebarProjects();
+                    
                     // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
                     alert('Project telah dipindahkan ke arsip!');
                 }
@@ -1122,7 +1073,7 @@
                     archivedProjects.splice(idx, 1);
                     renderProjectTable();
                     renderArchiveTable();
-                    renderSidebarProjects();
+                    
                     // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
                     alert('Project telah dipulihkan dari arsip!');
                 }
@@ -1147,7 +1098,7 @@
                 } else {
                     projects = projects.filter(p => p.id !== projectId);
                     renderProjectTable();
-                    renderSidebarProjects();
+                    
                 }
             } else {
                 alert(data.message || 'Gagal menghapus project');
@@ -1359,87 +1310,7 @@ Status          : Selesai (Diarsipkan)
         }
 
         // Render Sidebar Projects (Dynamic) - TANPA BADGE ANGKA
-        async function renderSidebarProjects() {
-            const container = document.getElementById('dynamicProjects');
-            if (!container) return;
-
-            try {
-                const [resPo, resNonPo, resArchive] = await Promise.all([
-                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
-                ]);
-
-                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const dataPo = await resPo.json();
-                const dataNonPo = await resNonPo.json();
-                const dataArchive = await resArchive.json();
-                const allProjects = [
-                    ...(dataPo.success ? dataPo.data : []),
-                    ...(dataNonPo.success ? dataNonPo.data : []),
-                    ...(dataArchive.success ? dataArchive.data : [])
-                ];
-
-                const projectMap = new Map();
-                allProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    if (!projectName) return;
-                    if (!projectMap.has(projectName)) {
-                        projectMap.set(projectName, project);
-                    }
-                });
-
-                const uniqueProjects = [...projectMap.values()];
-                if (uniqueProjects.length === 0) {
-                    container.innerHTML = '';
-                    return;
-                }
-
-                let html = '';
-                uniqueProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    const projectIdNumber = project.id;
-                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
-                    html += `
-                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                        <span>${projectName}</span>
-                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
-                    <div class="submenu" id="submenu-${projectId}">
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
-                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
-                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
-                    </div>
-                `;
-                });
-                container.innerHTML = html;
-
-                // Add event listeners after HTML is rendered
-                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
-                    item.addEventListener('click', function (e) {
-                        const arrow = this.querySelector('.menu-arrow');
-                        if (arrow && arrow.contains(e.target)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const projectSlug = this.getAttribute('data-project-slug');
-                            toggleSubmenu(projectSlug, e);
-                        } else {
-                            const projectId = this.getAttribute('data-project-id');
-                            setActiveMenuItem(this, 'project-' + projectId);
-                            window.location.href = '/dashboard/project/' + projectId;
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error('Error loading projects:', error);
-            }
-        }
+        
 
         // Render Arsip di Sidebar - TANPA BADGE ANGKA
         // COMMENTED OUT: Static menu items are now in navbar.html
@@ -1514,7 +1385,7 @@ Status          : Selesai (Diarsipkan)
             renderCustomerList();
             renderProjectTable();
             renderArchiveTable();
-            renderSidebarProjects();
+            
             // renderArchiveSidebar(); // Commented out - using static menu from navbar.html
             renderMaterialCards();
 

@@ -13,9 +13,9 @@
         }
         
         :root {
-            --primary-color: #1a1a1a;
-            --secondary-color: #4a4a4a;
-            --gradient: #1a1a1a;
+            --primary-color: #125BFB;
+            --secondary-color: #125BFB;
+            --gradient: #125BFB;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
@@ -1339,57 +1339,17 @@
             { id: 3, projectName: 'Project C', status: 'active' }
         ];
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
         
-        function toggleSubmenu(id, event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const submenu = document.getElementById('submenu-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-            if (submenu) {
-                submenu.classList.toggle('open');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        }
         
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
         
-        function confirmLogout(event) {
-            if (!confirm('Apakah Anda yakin ingin logout?')) {
-                event.preventDefault();
-                return false;
-            }
-            return true;
-        }
+        
+        
+        
+        
 
-        function setActiveMenuItem(element, menuId) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeMenu', menuId);
-        }
+        
 
-        function setActiveSubmenu(element, submenuId) {
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeSubmenu', submenuId);
-            return false;
-        }
+        
 
         // Switch Tab
         function switchTab(tab) {
@@ -1589,66 +1549,11 @@
         }
 
         // Render Sidebar Projects
-        function renderSidebarProjects() {
-            const container = document.getElementById('dynamicProjects');
-            if(!container) return;
-            
-            if (projects.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-            projects.forEach(project => {
-                const projectId = project.projectName.toLowerCase().replace(/\s+/g, '-');
-                
-                html += `
-                    <div class="menu-item" onclick="toggleSubmenu('${projectId}'); setActiveMenuItem(this, '${projectId}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span>${project.projectName}</span>
-                        <svg class="menu-arrow" id="arrow-${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                    <div class="submenu" id="submenu-${projectId}">
-                        <a href="#jasa" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                            </svg>
-                            Jasa
-                        </a>
-                        <a href="#material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                            </svg>
-                            Material
-                        </a>
-                        <a href="#overhead" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                            </svg>
-                            Overhead
-                        </a>
-                        <a href="#patty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'patty-cash'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="2"></circle>
-                                <path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-                            </svg>
-                            Patty Cash
-                        </a>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
+        
 
         // Initialize
         window.onload = function() {
-            renderSidebarProjects();
+            
             
             // Set Profile sebagai active menu
             document.querySelectorAll('.menu-item').forEach(item => {

@@ -39,7 +39,7 @@ from app import create_app, init_db
 
 if __name__ == '__main__':
     mode = sys.argv[1] if len(sys.argv) > 1 else 'development'
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
 
     if mode == 'init-db':
         # python run.py init-db  → buat tabel dan seed admin default

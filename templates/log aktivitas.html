@@ -14,9 +14,9 @@
         }
 
         :root {
-            --primary-color: #1a1a1a;
-            --secondary-color: #4a4a4a;
-            --gradient: #1a1a1a;
+            --primary-color: #125BFB;
+            --secondary-color: #125BFB;
+            --gradient: #125BFB;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
@@ -788,55 +788,17 @@
 
         // ==================== UTILITY FUNCTIONS ====================
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
+        
 
-        function toggleSubmenu(id, event) {
-            if (event) {
-                event.preventDefault();
-            }
-            const submenu = document.getElementById('submenu-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-            if (submenu) {
-                submenu.classList.toggle('open');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        }
+        
 
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
+        
 
-        function confirmLogout(event) {
-            event.preventDefault();
-            if (!confirm('Apakah Anda yakin ingin logout?')) return;
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-                .finally(() => { window.location.href = '/login'; });
-        }
+        
 
-        function setActiveMenuItem(element, menuId) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeMenu', menuId);
-        }
+        
 
-        function setActiveSubmenu(element, submenuId) {
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeSubmenu', submenuId);
-            return false;
-        }
+        
 
         // Format date
         function formatDateTime(dateString) {
@@ -1131,94 +1093,14 @@
 
         // ==================== SIDEBAR PROJECTS ====================
 
-        async function renderSidebarProjects() {
-            const container = document.getElementById('dynamicProjects');
-            if (!container) return;
-
-            try {
-                const [resPo, resNonPo, resArchive] = await Promise.all([
-                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
-                ]);
-
-                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const dataPo = await resPo.json();
-                const dataNonPo = await resNonPo.json();
-                const dataArchive = await resArchive.json();
-                const allProjects = [
-                    ...(dataPo.success ? dataPo.data : []),
-                    ...(dataNonPo.success ? dataNonPo.data : []),
-                    ...(dataArchive.success ? dataArchive.data : [])
-                ];
-
-                const projectMap = new Map();
-                allProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    if (!projectName) return;
-                    if (!projectMap.has(projectName)) {
-                        projectMap.set(projectName, project);
-                    }
-                });
-
-                const uniqueProjects = [...projectMap.values()];
-                if (uniqueProjects.length === 0) {
-                    container.innerHTML = '';
-                    return;
-                }
-
-                let html = '';
-                uniqueProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    const projectIdNumber = project.id;
-                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
-                    html += `
-                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                        <span>${projectName}</span>
-                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
-                    <div class="submenu" id="submenu-${projectId}">
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
-                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
-                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
-                    </div>
-                `;
-                });
-                container.innerHTML = html;
-
-                // Add event listeners after HTML is rendered
-                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
-                    item.addEventListener('click', function (e) {
-                        const arrow = this.querySelector('.menu-arrow');
-                        if (arrow && arrow.contains(e.target)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const projectSlug = this.getAttribute('data-project-slug');
-                            toggleSubmenu(projectSlug, e);
-                        } else {
-                            const projectId = this.getAttribute('data-project-id');
-                            setActiveMenuItem(this, 'project-' + projectId);
-                            window.location.href = '/dashboard/project/' + projectId;
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error('Error loading projects:', error);
-            }
-        }
+        
 
         window.onload = async function () {
             const now = new Date();
             document.getElementById('startDate').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
             document.getElementById('endDate').value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            await renderSidebarProjects();
+            
             fetchDropdownUsers();
             fetchLogs();
         };
