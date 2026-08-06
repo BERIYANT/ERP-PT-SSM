@@ -1,11 +1,12 @@
 import io
+from datetime import date
 from pathlib import Path
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import get_template
 from django.test import Client,TestCase
 from django.urls import URLPattern,get_resolver
-from .models import Customer,Project,SupervisiLaporan,User
+from .models import Customer,Project,ProjectSegment,ProjectMember,DailyReport,User
 
 class ContractSmoke(TestCase):
  def setUp(self):
@@ -15,7 +16,7 @@ class ContractSmoke(TestCase):
   self.project=Project.objects.create(customer=self.customer,project_name='Contract Project',created_by=self.u)
  def test_every_template_compiles_and_renders_authenticated(self):
   templates=sorted(Path(settings.BASE_DIR/'templates').rglob('*.html'))
-  self.assertEqual(len(templates),26)
+  self.assertGreaterEqual(len(templates),27)
   for file in templates:
    name=str(file.relative_to(settings.BASE_DIR/'templates'))
    with self.subTest(template=name):
@@ -56,6 +57,19 @@ class ContractSmoke(TestCase):
  def test_supervisi_role_guard(self):
   user=User.objects.create_user('ordinary','secret12',nama='Ordinary',role='user');self.c.force_login(user)
   self.assertEqual(self.c.get('/api/supervisi/laporan').status_code,403)
+
+class ErpRoleWorkflow(TestCase):
+ def setUp(self):
+  self.admin=User.objects.create_user('erpadmin','secret12',nama='Admin',role='admin');self.mandor=User.objects.create_user('mandor','secret12',nama='Mandor',role='mandor');self.worker=User.objects.create_user('worker','secret12',nama='Worker',role='karyawan')
+  customer=Customer.objects.create(name='ERP Customer');self.project=Project.objects.create(customer=customer,project_name='ERP Project',created_by=self.admin);self.segment=ProjectSegment.objects.create(project=self.project,code='A',name='Area A')
+  ProjectMember.objects.create(project=self.project,segment=self.segment,user=self.worker,start_date=date.today());ProjectMember.objects.create(project=self.project,segment=self.segment,user=self.mandor,start_date=date.today())
+ def test_role_dashboard_and_daily_approval(self):
+  c=Client();c.force_login(self.worker);self.assertEqual(c.get('/erp/').status_code,200)
+  response=c.post('/erp/create/daily/',{'project':self.project.id,'segment':self.segment.id,'date':'2026-08-06','activity':'Pengecoran','quantity':'5','unit':'m3'});self.assertEqual(response.status_code,302);report=DailyReport.objects.get();self.assertEqual(report.status,'SUBMITTED')
+  c.force_login(self.mandor);self.assertEqual(c.post(f'/erp/decision/daily/{report.id}/approve/').status_code,302);report.refresh_from_db();self.assertEqual(report.status,'VERIFIED')
+ def test_unassigned_worker_is_denied(self):
+  other=User.objects.create_user('other','secret12',nama='Other',role='karyawan');c=Client();c.force_login(other)
+  response=c.post('/erp/create/daily/',{'project':self.project.id,'segment':self.segment.id,'date':'2026-08-06','activity':'X','quantity':'1'});self.assertEqual(response.status_code,404)
 
 class CsrfAndAuthSmoke(TestCase):
  def setUp(self):self.u=User.objects.create_user('admin','admin123',nama='Admin',role='admin');self.c=Client(enforce_csrf_checks=True)

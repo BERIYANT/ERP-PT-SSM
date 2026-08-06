@@ -1,8 +1,9 @@
 from django.urls import path,re_path
 from portal import views as v
+from portal import erp
 from django.conf import settings
 from django.conf.urls.static import static
-urlpatterns=[path('',v.index),path('login',lambda r:v.page(r,'login.html')),path('dashboard',v.dashboard),path('dashboard/project/<int:project_id>',v.dashboard),
+urlpatterns=[path('',v.index),path('login',lambda r:v.page(r,'login.html')),path('dashboard',v.dashboard),path('dashboard/project/<int:project_id>',v.dashboard),path('erp/',erp.dashboard,name='erp-dashboard'),path('erp/create/<str:kind>/',erp.create,name='erp-create'),path('erp/decision/<str:module>/<int:pk>/<str:decision>/',erp.decide,name='erp-decide'),
 path('api/',v.health),path('api/health',v.health),path('api/auth/<str:action>',v.auth_api),
 re_path(r'^api/supervisi/laporan/?$',v.supervisi_api),path('api/supervisi/laporan/foto/<int:id>',lambda r,id:v.supervisi_api(r,id,'delete-foto')),path('api/supervisi/laporan/<int:id>/foto',lambda r,id:v.supervisi_api(r,id,'foto')),path('api/supervisi/laporan/<int:id>',v.supervisi_api),re_path(r'^api/supervisi/evidence/?$',v.supervisi_evidence),
 re_path(r'^api/customers/?$',v.customers),path('api/customers/<int:id>',v.customers),
