@@ -21,10 +21,17 @@
         });
     </script>
     <div class="sidebar-header">
-        <div class="sidebar-header-left">
-            <img src="/static/images/logo_ssm.png" alt="SSM Logo" class="sidebar-logo">
-            <div class="sidebar-title">SSM PORTAL</div>
+                <div class="sidebar-header-left">
+            <div style="width: 36px; height: 36px; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor"></polygon>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                </svg>
+            </div>
+            <div class="sidebar-title" style="color: #1e293b; font-size: 1.3rem; font-weight: 700;">SSM PORTAL</div>
         </div>
+        
     </div>
 
     <style>
@@ -33,12 +40,17 @@
         ══════════════════════════════════════════ */
         .sidebar {
             position: fixed;
-            left: 0;
-            top: 0;
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            height: calc(100vh - 40px);
             width: var(--sidebar-width, 280px);
-            height: 100vh;
-            background: #ffffff;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.07);
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            border-radius: 24px;
             z-index: 200;
             display: flex;
             flex-direction: column;
@@ -53,7 +65,7 @@
         }
 
         .sidebar:not(.collapsed) {
-            box-shadow: 4px 0 28px rgba(0, 166, 202, 0.08);
+            box-shadow: 4px 0 28px rgba(18, 91, 251, 0.08);
         }
 
         .sidebar.collapsed {
@@ -66,7 +78,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 18px 20px;
-            border-bottom: 1px solid #e8e8e8;
+            
             flex-shrink: 0;
         }
 
@@ -110,7 +122,7 @@
             border: none;
             cursor: pointer;
             padding: 6px;
-            border-radius: 6px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -171,9 +183,9 @@
         }
 
         .collapse-toggle-btn:hover {
-            border-color: #00a6ca;
+            border-color: #125BFB;
             background: #f0fbfd;
-            color: #00a6ca;
+            color: #125BFB;
         }
 
         .collapse-toggle-btn:active {
@@ -224,39 +236,45 @@
         }
 
         /* ── Menu Item ── */
+        
+
+        
+
+        
+
+        /* ── ICON (SVG pertama dalam menu-item) ── */
+        
         .menu-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 20px;
+            padding: 10px 16px;
             cursor: pointer;
-            color: #555;
-            font-size: 14px;
+            color: #697a8d;
+            font-size: 15px;
             font-weight: 500;
             text-decoration: none;
-            border-left: 3px solid transparent;
-            transition: background-color 0.22s ease, color 0.22s ease,
-                border-color 0.22s ease, transform 0.22s ease;
-            will-change: transform, background-color;
+            border-radius: 20px;
+            margin: 0 16px 4px 16px;
+            transition: all 0.2s ease;
             white-space: nowrap;
-            overflow: hidden;
+            
         }
 
         .menu-item:hover {
-            background-color: #f0fbfd;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            background-color: rgba(18, 91, 251, 0.05);
+            color: #125BFB;
             transform: translateX(2px);
         }
 
         .menu-item.active {
-            background-color: #e8f8fc;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            color: #125BFB !important;
+            
+            font-weight: 600;
             transform: translateX(1px);
         }
 
-        /* ── ICON (SVG pertama dalam menu-item) ── */
         .menu-item>svg:first-of-type {
             width: 20px !important;
             height: 20px !important;
@@ -291,27 +309,11 @@
         /* ══════════════════════════════════════════
            COLLAPSED STATE — FIX UTAMA
         ══════════════════════════════════════════ */
-        .sidebar.collapsed .menu-item {
-            justify-content: center;
-            padding: 14px 0;
-            gap: 0;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
-        .sidebar.collapsed .menu-item:hover {
-            background-color: #f0fbfd;
-            color: #00a6ca;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
-        .sidebar.collapsed .menu-item.active {
-            background-color: #e8f8fc;
-            color: #00a6ca;
-            border-left-color: transparent !important;
-            transform: none !important;
-        }
+        .sidebar.collapsed 
 
         /* Sembunyikan teks dan arrow saat collapsed */
         .sidebar.collapsed .menu-item span {
@@ -328,7 +330,39 @@
         }
 
         /* Pastikan icon tetap tampil dan ter-center saat collapsed */
-        .sidebar.collapsed .menu-item>svg:first-of-type {
+        .sidebar.collapsed 
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            color: #697a8d;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 20px;
+            margin: 0 16px 4px 16px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            
+        }
+
+        .menu-item:hover {
+            background-color: rgba(18, 91, 251, 0.05);
+            color: #125BFB;
+            transform: translateX(2px);
+        }
+
+        .menu-item.active {
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            color: #125BFB !important;
+            
+            font-weight: 600;
+            transform: translateX(1px);
+        }
+
+        .menu-item>svg:first-of-type {
             display: block !important;
             margin: 0 !important;
             flex-shrink: 0 !important;
@@ -392,15 +426,15 @@
 
         .submenu-item:hover {
             background-color: #f0fbfd;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            color: #125BFB;
+            border-left-color: #125BFB;
             transform: translateX(2px);
         }
 
         .submenu-item.active {
             background-color: #e8f8fc;
-            color: #00a6ca;
-            border-left-color: #00a6ca;
+            color: #125BFB;
+            border-left-color: #125BFB;
             transform: translateX(1px);
         }
 
@@ -455,13 +489,9 @@
         }
 
         /* ── Nested Submenu (Level 3) ── */
-        .submenu .menu-item {
-            border-left: none;
-        }
+        .submenu 
 
-        .submenu .menu-item:hover {
-            border-left: none;
-        }
+        .submenu 
 
         .submenu .submenu {
             max-height: 0;
@@ -479,83 +509,7 @@
             display: none !important;
         }
 
-        /* ── User Profile Section ── */
-        .sidebar-user-profile {
-            flex-shrink: 0;
-            padding: 16px 20px;
-            border-top: 1px solid #e8e8e8;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar.collapsed .sidebar-user-profile {
-            padding: 15px 0;
-            justify-content: center;
-        }
-
-        .user-profile-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .user-profile-info {
-            flex: 1;
-            min-width: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar.collapsed .user-profile-info {
-            opacity: 0;
-            display: none;
-        }
-
-        .user-profile-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-profile-role {
-            font-size: 12px;
-            color: #999;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-profile-logout {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            color: #e74c3c;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        .sidebar.collapsed .user-profile-logout {
-            display: none !important;
-        }
+        
 
         .user-profile-logout:hover {
             background-color: #fef5f5;
@@ -581,9 +535,7 @@
         }
 
         /* ── Tooltip saat collapsed ── */
-        .sidebar.collapsed .menu-item {
-            position: relative;
-        }
+        .sidebar.collapsed 
 
         .sidebar.collapsed .menu-item::after {
             content: attr(data-tooltip);
@@ -596,7 +548,7 @@
             font-size: 12px;
             font-weight: 500;
             padding: 5px 10px;
-            border-radius: 6px;
+            border-radius: 20px;
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
@@ -607,7 +559,305 @@
         .sidebar.collapsed .menu-item:hover::after {
             opacity: 1;
         }
-    </style>
+            /* ── User Profile Header (Top Navbar) ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .user-profile-avatar-header {
+            width: 32px;
+            height: 32px;
+            border-radius: 20px;
+            background: #125BFB;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .user-profile-info-header {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-profile-name-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-profile-role-header {
+            font-size: 11px;
+            color: #666;
+        }
+        .user-profile-logout-header {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: #e74c3c;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .user-profile-logout-header:hover {
+            background-color: #fee9e7;
+        }
+        .user-profile-logout-header svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ══════════════════════════════════════════
+           GLOBAL GLASSMORPHISM OVERRIDES FOR ALL PAGES
+           ══════════════════════════════════════════ */
+        body {
+            background-color: #f8fafc !important;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(213, 100%, 95%, 1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225, 100%, 98%, 1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339, 49%, 95%, 0.5) 0, transparent 50%) !important;
+            background-attachment: fixed !important;
+            background-size: cover !important;
+            font-family: 'Public Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+
+        .main-content {
+            margin-left: calc(var(--sidebar-width) + 20px) !important;
+            min-height: 100vh;
+            transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content.expanded {
+            margin-left: calc(var(--sidebar-collapsed-width) + 20px) !important;
+        }
+        @media (max-width: 968px) {
+            .main-content, .main-content.expanded {
+                margin-left: 0 !important;
+            }
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.65) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            border-radius: 24px !important;
+            margin: 16px 20px 0 20px !important;
+            height: 80px !important;
+            box-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.05) !important;
+            padding: 0 24px !important;
+            position: sticky !important;
+            top: 20px !important;
+            z-index: 100 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }
+        .header-title {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+
+        .content {
+            padding: 16px 20px !important;
+            flex-grow: 1;
+        }
+
+        /* Card Elements */
+        .card, 
+        .table-wrapper, 
+        .summary-card, 
+        .material-left, 
+        .material-total-card, 
+        .modal-content {
+            background: rgba(255, 255, 255, 0.65) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.05) !important;
+        }
+
+        .summary-card, .material-total-card {
+            border-left: 5px solid #3b82f6 !important;
+            padding: 20px !important;
+        }
+        .summary-card.budget {
+            border-left-color: #22c55e !important;
+        }
+
+        /* Inputs & Selects */
+        input[type="text"], 
+        input[type="number"], 
+        input[type="date"], 
+        select, 
+        textarea {
+            background: rgba(255, 255, 255, 0.75) !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            border-radius: 12px !important;
+            color: #1e293b !important;
+            outline: none !important;
+            transition: all 0.2s ease !important;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
+            padding: 10px 14px !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6 !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        }
+
+        /* Primary Buttons */
+        .btn-add,
+        .btn-search,
+        .btn-save,
+        .btn-add-material,
+        .btn-search-material,
+        .material-use-btn {
+            background: #3b82f6 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+        }
+        .btn-add:hover,
+        .btn-search:hover,
+        .btn-save:hover,
+        .btn-add-material:hover,
+        .btn-search-material:hover,
+        .material-use-btn:hover {
+            background: #2563eb !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3) !important;
+        }
+        .btn-add:active, .btn-save:active {
+            transform: translateY(0) !important;
+        }
+        .material-use-btn.used {
+            background: #22c55e !important;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2) !important;
+        }
+
+        /* Tabs, Filters & Cancel */
+        .material-tab-btn, 
+        .filter-btn, 
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.9) !important;
+            color: #64748b !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            padding: 8px 16px !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .material-tab-btn:hover, 
+        .filter-btn:hover, 
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #1e293b !important;
+        }
+        .material-tab-btn.active, 
+        .filter-btn.active {
+            background: #3b82f6 !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        /* Premium Table List */
+        table {
+            border-collapse: collapse !important;
+            background: transparent !important;
+            width: 100% !important;
+        }
+        thead {
+            background: rgba(0, 0, 0, 0.02) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        }
+        th {
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            padding: 14px 16px !important;
+            border: none !important;
+        }
+        td {
+            padding: 14px 16px !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+            color: #334155 !important;
+            font-size: 13px !important;
+        }
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        /* Progress Bars */
+        .progress-bar, .material-progress-bar {
+            background: rgba(0, 0, 0, 0.05) !important;
+            border-radius: 50px !important;
+            height: 8px !important;
+            overflow: hidden !important;
+        }
+        .progress-fill, .material-progress-fill {
+            height: 100% !important;
+            border-radius: 50px !important;
+            background: #3b82f6 !important;
+        }
+        .progress-fill.warning, .material-progress-fill.warning {
+            background: #f59e0b !important;
+        }
+        .progress-fill.danger, .material-progress-fill.danger {
+            background: #ef4444 !important;
+        }
+
+        /* Modals Overlay */
+        .modal {
+            background: rgba(15, 23, 42, 0.3) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
+
+</style>
 
     <script>
         function toggleSubmenu(id, event) {
@@ -883,27 +1133,50 @@
         document.addEventListener('DOMContentLoaded', function () {
             renderSidebarProjects();
         });
+
+        // Protect central functions from being overridden by page-specific duplicate scripts
+        (function() {
+            const protectedFunctions = {
+                renderSidebarProjects,
+                toggleSidebar,
+                toggleSubmenu,
+                toggleMobileMenu,
+                closeMobileMenu,
+                setActiveMenuItem,
+                setActiveSubmenu,
+                confirmLogout
+            };
+            for (const [name, fn] of Object.entries(protectedFunctions)) {
+                try {
+                    Object.defineProperty(window, name, {
+                        get: () => fn,
+                        set: () => { console.warn(`Ignored override of ${name} to maintain non-blinking glass theme`); },
+                        configurable: false
+                    });
+                } catch(e) {}
+            }
+        })();
     </script>
 
     <nav class="sidebar-menu" id="sidebarMenu">
 
         <!-- Master PO -->
-        <div class="menu-item {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}active{% endif %}" data-tooltip="Master PO"
+        <div class="menu-item {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}active{% endif %}" data-tooltip="Master PO"
             onclick="toggleSubmenu('master-po'); setActiveMenuItem(this, 'master-po')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
             <span>Master PO</span>
-            <svg class="menu-arrow {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}rotated{% endif %}" id="arrow-master-po" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <svg class="menu-arrow {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}rotated{% endif %}" id="arrow-master-po" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </div>
-        <div class="submenu {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}open{% endif %}" id="submenu-master-po">
-            <a href="/project-po" class="submenu-item level-2 {% if request.path.startswith('/project-po') %}active{% endif %}"
+        <div class="submenu {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}open{% endif %}" id="submenu-master-po">
+            <a href="/project-po" class="submenu-item level-2 {% if '/project-po' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'project-po'); closeMobileMenu();">Project PO</a>
-            <a href="/project-non-po" class="submenu-item level-2 {% if request.path.startswith('/project-non-po') %}active{% endif %}"
+            <a href="/project-non-po" class="submenu-item level-2 {% if '/project-non-po' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'project-non-po'); closeMobileMenu();">Project NON-PO</a>
         </div>
 
@@ -956,28 +1229,28 @@
         </a>
 
         <!-- Arsip is already processed... -->
-        <div class="menu-item {% if request.path.startswith('/arsip') %}active{% endif %}" data-tooltip="Arsip" onclick="toggleSubmenu('arsip'); setActiveMenuItem(this, 'arsip')">
+        <div class="menu-item {% if '/arsip' in request.path %}active{% endif %}" data-tooltip="Arsip" onclick="toggleSubmenu('arsip'); setActiveMenuItem(this, 'arsip')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="21 8 21 21 3 21 3 8"></polyline>
                 <rect x="1" y="3" width="22" height="5"></rect>
                 <line x1="10" y1="12" x2="14" y2="12"></line>
             </svg>
             <span>Arsip</span>
-            <svg class="menu-arrow {% if request.path.startswith('/arsip') %}rotated{% endif %}" id="arrow-arsip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <svg class="menu-arrow {% if '/arsip' in request.path %}rotated{% endif %}" id="arrow-arsip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </div>
-        <div class="submenu {% if request.path.startswith('/arsip') %}open{% endif %}" id="submenu-arsip">
+        <div class="submenu {% if '/arsip' in request.path %}open{% endif %}" id="submenu-arsip">
             <a href="/arsip" class="submenu-item level-2 {% if request.path == '/arsip' %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-beranda'); closeMobileMenu();">
                 Beranda
             </a>
-            <a href="/arsip/invoice" class="submenu-item level-2 {% if request.path.startswith('/arsip/invoice') %}active{% endif %}"
+            <a href="/arsip/invoice" class="submenu-item level-2 {% if '/arsip/invoice' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-invoice'); closeMobileMenu();">
                 Arsip Invoice
             </a>
-            <a href="/arsip/project" class="submenu-item level-2 {% if request.path.startswith('/arsip/project') %}active{% endif %}"
+            <a href="/arsip/project" class="submenu-item level-2 {% if '/arsip/project' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-project'); closeMobileMenu();">
                 Arsip Project
             </a>
@@ -1028,24 +1301,80 @@
         </button>
     </div>
 
-    <!-- User Profile Section -->
-    <div class="sidebar-user-profile">
-        <div class="user-profile-avatar">{{ (current_user.nama or 'U')[:2]|upper }}</div>
-        <div class="user-profile-info">
-            <div class="user-profile-name">{{ current_user.nama or 'User' }}</div>
-            <div class="user-profile-role">{{ current_user.role or 'User' }}</div>
-        </div>
-        <button class="user-profile-logout" onclick="confirmLogout(event)" title="Logout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-        </button>
-    </div>
+    
 
     <!-- Synchronous state restore to prevent blinking -->
-    <style>.no-transition * { transition: none !important; }</style>
+    <style>.no-transition * { transition: none !important; }        /* ── User Profile Header (Top Navbar) ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            border: 1px solid #f0f0f0;
+        }
+        .user-profile-avatar-header {
+            width: 32px;
+            height: 32px;
+            border-radius: 20px;
+            background: #125BFB;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .user-profile-info-header {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-profile-name-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+        .user-profile-role-header {
+            font-size: 11px;
+            color: #666;
+        }
+        .user-profile-logout-header {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: #e74c3c;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .user-profile-logout-header:hover {
+            background-color: #fee9e7;
+        }
+        .user-profile-logout-header svg {
+            width: 18px;
+            height: 18px;
+        }
+
+</style>
     <script>
         (function() {
             document.body.classList.add('no-transition');

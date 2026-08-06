@@ -14,14 +14,14 @@
         }
 
         :root {
-            --primary-color: #00a6ca;
-            --secondary-color: #00c9a7;
-            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --primary-color: #125BFB;
+            --secondary-color: #125BFB;
+            --gradient: #125BFB;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
-            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
-            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --card-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+            --hover-shadow: 0 4px 12px 0 rgba(67, 89, 113, 0.16);
             --success-color: #2ecc71;
             --warning-color: #f39c12;
             --danger-color: #e74c3c;
@@ -32,7 +32,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
+            background-color: #f5f5f9;
             color: #333;
             overflow-x: hidden;
         }
@@ -314,7 +314,7 @@
             display: none;
             width: 30px;
             height: 30px;
-            background: var(--gradient);
+            background: #ffffff;
             border: none;
             border-radius: 8px;
             color: white;
@@ -359,6 +359,7 @@
             }
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 
 <body>
@@ -375,10 +376,29 @@
                 </svg>
             </button>
             <h1 class="header-title">Arsip Invoice</h1>
+            <div class="header-right-group">
             <div class="datetime-info">
                 <div class="datetime-display" id="timeDisplay">00:00:00</div>
                 <div class="date-display" id="dateDisplay">Loading...</div>
             </div>
+        
+            
+                <div class="user-profile-header">
+                    <div class="user-profile-avatar-header">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
+                    <div class="user-profile-info-header">
+                        <div class="user-profile-name-header">{{ current_user.nama|default:'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role|default:'User' }}</div>
+                    </div>
+                    <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
         </header>
 
         <!-- Content -->
@@ -445,60 +465,22 @@
         // ==================== UTILITY FUNCTIONS ====================
 
         // Toggle Sidebar
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
+        
 
         // Toggle Submenu
-        function toggleSubmenu(id, event) {
-            if (event) {
-                event.preventDefault();
-            }
-            const submenu = document.getElementById('submenu-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-            if (submenu) {
-                submenu.classList.toggle('open');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        }
+        
 
         // Toggle Mobile Menu
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
+        
 
         // Confirm Logout
-        function confirmLogout(event) {
-            event.preventDefault();
-            if (!confirm('Apakah Anda yakin ingin logout?')) return;
-            fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-                .finally(() => { window.location.href = '/login'; });
-        }
+        
 
         // Set active menu item
-        function setActiveMenuItem(element, menuId) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeMenu', menuId);
-        }
+        
 
         // Set active submenu item
-        function setActiveSubmenu(element, submenuId) {
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeSubmenu', submenuId);
-            return false;
-        }
+        
 
         // Format Rupiah
         function formatRupiah(amount) {
@@ -554,7 +536,7 @@ Status          : Lunas (Paid)
                         archivedInvoices = archivedInvoices.filter(i => i.id !== invoiceId);
                         renderInvoiceTable();
                         updateSummaryCards();
-                        await renderSidebarProjects();
+                        
                         alert('Invoice berhasil dihapus!');
                     } else { alert(data.message || 'Gagal menghapus invoice.'); }
                 } catch (e) { alert('Terjadi kesalahan jaringan.'); }
@@ -663,87 +645,7 @@ Status          : Lunas (Paid)
         }
 
         // Render Sidebar Projects (Dynamic)
-        async function renderSidebarProjects() {
-            const container = document.getElementById('dynamicProjects');
-            if (!container) return;
-
-            try {
-                const [resPo, resNonPo, resArchive] = await Promise.all([
-                    fetch('/api/projects?type=po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?type=non_po', { credentials: 'same-origin' }),
-                    fetch('/api/projects?status=archived', { credentials: 'same-origin' })
-                ]);
-
-                if (resPo.status === 401 || resNonPo.status === 401 || resArchive.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const dataPo = await resPo.json();
-                const dataNonPo = await resNonPo.json();
-                const dataArchive = await resArchive.json();
-                const allProjects = [
-                    ...(dataPo.success ? dataPo.data : []),
-                    ...(dataNonPo.success ? dataNonPo.data : []),
-                    ...(dataArchive.success ? dataArchive.data : [])
-                ];
-
-                const projectMap = new Map();
-                allProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    if (!projectName) return;
-                    if (!projectMap.has(projectName)) {
-                        projectMap.set(projectName, project);
-                    }
-                });
-
-                const uniqueProjects = [...projectMap.values()];
-                if (uniqueProjects.length === 0) {
-                    container.innerHTML = '';
-                    return;
-                }
-
-                let html = '';
-                uniqueProjects.forEach(project => {
-                    const projectName = project.project_name;
-                    const projectIdNumber = project.id;
-                    const projectId = projectName.toLowerCase().replace(/\s+/g, '-');
-                    html += `
-                    <div class="menu-item" data-project-id="${projectIdNumber}" data-project-slug="${projectId}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                        <span>${projectName}</span>
-                        <svg class="menu-arrow" id="arrow-${projectId}" data-submenu="${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
-                    <div class="submenu" id="submenu-${projectId}">
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">Jasa</a>
-                        <a href="/material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material');">Material</a>
-                        <a href="#" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">Overhead</a>
-                        <a href="/petty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'petty-cash');">Petty Cash</a>
-                    </div>
-                `;
-                });
-                container.innerHTML = html;
-
-                // Add event listeners after HTML is rendered
-                document.querySelectorAll('.menu-item[data-project-id]').forEach(item => {
-                    item.addEventListener('click', function (e) {
-                        const arrow = this.querySelector('.menu-arrow');
-                        if (arrow && arrow.contains(e.target)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const projectSlug = this.getAttribute('data-project-slug');
-                            toggleSubmenu(projectSlug, e);
-                        } else {
-                            const projectId = this.getAttribute('data-project-id');
-                            setActiveMenuItem(this, 'project-' + projectId);
-                            window.location.href = '/dashboard/project/' + projectId;
-                        }
-                    });
-                });
-            } catch (error) {
-                console.error('Error loading projects:', error);
-            }
-        }
+        
 
         // Initialize
         window.onload = async function () {
@@ -770,7 +672,7 @@ Status          : Lunas (Paid)
                 }
             } catch (e) { console.error('Gagal memuat arsip invoice:', e); }
 
-            await renderSidebarProjects();
+            
             renderInvoiceTable();
             updateSummaryCards();
         };

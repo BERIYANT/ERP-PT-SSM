@@ -4,634 +4,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSM Portal - Dashboard Project A</title>
+    <title>SSM Portal - Dashboard Project</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary-color: #00a6ca;
-            --secondary-color: #00c9a7;
-            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #0ea5e9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.4);
+            
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
-            --header-height: 70px;
-            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
-            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
-            --archive-color: #95a5a6;
-
-            /* Warna untuk grafik */
-            --jasa-color: #00a6ca;
-            --material-color: #f39c12;
-            --overhead-color: #e74c3c;
-            --patty-cash-color: #2ecc71;
-            --budget-awal-color: #9b59b6;
+            --header-height: 80px;
+            --card-shadow: 0 10px 40px -10px rgba(31, 38, 135, 0.05);
+            --border-radius: 24px;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: 'Public Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-main);
             overflow-x: hidden;
+            font-size: 0.9375rem;
+            
+            /* Glassmorphism Background Mesh */
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(213, 100%, 95%, 1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225, 100%, 98%, 1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339, 49%, 95%, 0.5) 0, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
         }
 
-        /* Main Content */
         .main-content {
-            margin-left: var(--sidebar-width);
+            margin-left: calc(var(--sidebar-width) + 20px);
             min-height: 100vh;
             transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content.expanded { margin-left: calc(var(--sidebar-collapsed-width) + 20px); }
+
+        /* Glass Panel Utility */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--card-shadow);
         }
 
-        .main-content.expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-
-        /* Header */
+        /* Floating Header */
         .header {
-            background: white;
             height: var(--header-height);
-            padding: 0 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin: 16px 20px 0 20px;
+            border-radius: var(--border-radius);
             position: sticky;
-            top: 0;
+            top: 20px;
             z-index: 100;
         }
 
-        .header-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .datetime-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 2px;
-        }
-
-        .datetime-display {
-            font-size: 14px;
-            font-weight: 600;
-            color: #00a6ca;
-        }
-
-        .date-display {
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Dashboard Content */
-        .dashboard-content {
-            padding: 30px;
-        }
-
-        /* Top Row - Timeline and Final Card */
-        .top-row {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        /* Timeline Section */
-        .timeline-section {
-            flex: 2;
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .timeline-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .timeline-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            /* Scrollbar styling */
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .timeline-wrapper::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .timeline-container {
-            position: relative;
-            padding: 10px 0;
-            min-width: 100%;
-            display: inline-flex;
-            flex-direction: column;
-        }
-
-        .timeline-line {
-            position: absolute;
-            top: 35px; /* Center of the 50px dot + 10px padding top */
-            left: 60px; /* Start center of first 120px flex child */
-            right: 60px; /* End center of last 120px flex child */
-            height: 4px;
-            background: #e2e8f0;
-            z-index: 1;
-        }
-
-        .timeline-progress {
-            position: absolute;
-            top: 35px;
-            left: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, #00a6ca, #00c9a7);
-            z-index: 1;
-            transition: width 0.5s ease;
-            width: 0%;
-        }
-
-        .timeline-dots {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            z-index: 2;
-            width: 100%;
-        }
-
-        .timeline-dot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            width: 120px;
-            flex-shrink: 0;
-            text-align: center;
-        }
-
-        .dot {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            border: 4px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 3;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-
-        .dot:hover {
-            transform: scale(1.1);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-            box-shadow: 0 10px 15px -3px rgba(0, 166, 202, 0.2);
-        }
-
-        .dot.completed {
-            background: var(--secondary-color);
-            border-color: var(--secondary-color);
-            color: white;
-            box-shadow: 0 0 20px rgba(0, 201, 167, 0.4);
-            font-weight: 800;
-        }
-
-        .dot-date {
-            font-size: 12px;
-            font-weight: 600;
-            color: #666;
-        }
-
-        .dot-task {
-            font-size: 11px;
-            color: #999;
-            max-width: 80px;
-            text-align: center;
-        }
-
-        /* Final RAB Card */
-        .final-rab-card {
-            flex: 1;
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-            background: linear-gradient(135deg, #00a6ca 0%, #00c9a7 100%);
-            color: white;
-        }
-
-        .final-rab-title {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .final-rab-value-row {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .final-rab-value {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .final-rab-remaining {
-            font-size: 14px;
-            opacity: 0.95;
-            margin-bottom: 15px;
-        }
-
-        .final-rab-details {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            gap: 8px;
-        }
-
-        .final-rab-detail-item {
-            text-align: center;
-            flex: 1;
-        }
-
-        .final-rab-detail-label {
-            font-size: 11px;
-            opacity: 0.8;
-            margin-bottom: 4px;
-        }
-
-        .final-rab-detail-value {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* Chart Section */
-        .chart-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .chart-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .chart-legend {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 450px;
-            width: 100%;
-        }
-
-        /* Status Cards */
-        .status-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .status-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-        }
-
-        .status-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--hover-shadow);
-        }
-
-        .status-card.jasa {
-            border-top: 4px solid var(--jasa-color);
-        }
-
-        .status-card.material {
-            border-top: 4px solid var(--material-color);
-        }
-
-        .status-card.overhead {
-            border-top: 4px solid var(--overhead-color);
-        }
-
-        .status-card.patty-cash {
-            border-top: 4px solid var(--patty-cash-color);
-        }
-
-        .status-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .status-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .status-icon svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .status-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #666;
-        }
-
-        .status-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .status-progress {
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .status-progress-bar {
-            height: 100%;
-            border-radius: 3px;
-        }
-
-        .status-footer {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        /* Modal Animations */
-        .modal-backdrop {
-            position: fixed;
-            z-index: 1999;
-            left: 0;
-            top: 0;
+        .header-nav {
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.3s ease;
-            will-change: background-color;
-        }
-
-        .modal-backdrop.open {
-            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
-            z-index: 2000;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
         }
 
-        .modal-content-wrapper {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            transform: translateY(-20px) scale(0.95);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            will-change: opacity, transform;
+        .menu-toggle { display: none; background: white; border: none; color: var(--text-main); cursor: pointer; padding: 10px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+        .clock-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,1);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        .modal-backdrop.open .modal-content-wrapper {
-            opacity: 1;
-            transform: translateY(0) scale(1);
+        .dashboard-content { padding: 16px 20px; flex-grow: 1; max-width: 100%; overflow-x: hidden; }
+
+        /* Grid Layout */
+        .row { display: flex; flex-wrap: wrap; margin-right: -8px; margin-left: -8px; }
+        .col-12 { flex: 0 0 100%; max-width: 100%; padding: 0 8px; margin-bottom: 16px; box-sizing: border-box; }
+        .col-md-8 { flex: 0 0 66.66667%; max-width: 66.66667%; padding: 0 8px; margin-bottom: 16px; box-sizing: border-box; }
+        .col-md-4 { flex: 0 0 33.33333%; max-width: 33.33333%; padding: 0 8px; margin-bottom: 16px; box-sizing: border-box; }
+        .col-md-6, .col-6 { flex: 0 0 50%; max-width: 50%; padding: 0 8px; margin-bottom: 16px; box-sizing: border-box; }
+
+        @media (max-width: 992px) {
+            .col-md-8, .col-md-4, .col-md-6 { flex: 0 0 100%; max-width: 100%; }
+            .clock-pill { display: none; } /* Hide clock on mobile to save space */
         }
 
-        .modal-form {
+        /* Card Base */
+        .card {
+            border-radius: var(--border-radius);
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-input,
-        .form-select,
-        .form-textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            box-sizing: border-box;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 166, 202, 0.1);
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .modal-button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        .modal-btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-
-        .modal-btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 166, 202, 0.3);
-        }
-
-        .modal-btn-secondary {
-            background: #e8e8e8;
-            color: #555;
-        }
-
-        .modal-btn-secondary:hover {
-            background: #d8d8d8;
-        }
-
-        /* Responsive */
-        @media (max-width: 968px) {
-            .main-content {
-                margin-left: 0 !important;
-            }
-
-            .top-row {
-                flex-direction: column;
-            }
-
-            .chart-container {
-                height: 500px;
-            }
-
-            .status-cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .chart-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .status-cards {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            width: 30px;
-            height: 30px;
-            background: var(--gradient);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            flex-shrink: 0;
+            position: relative;
             transition: all 0.3s ease;
         }
+        .h-100 { height: 100%; }
+        .card-body { padding: 20px; flex: 1 1 auto; }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: #1e293b; margin-bottom: 0.875rem; }
 
-        .menu-toggle:hover {
-            transform: scale(1.1);
+        /* Chart Cards */
+        .chart-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+
+        /* Schedule scroll container */
+        .schedule-scroll {
+            display: flex; overflow-x: auto; padding-bottom: 10px; gap: 16px; scrollbar-width: thin;
         }
-
-        .menu-toggle svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.3s ease;
+        .schedule-scroll::-webkit-scrollbar { height: 6px; }
+        .schedule-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        .schedule-card {
+            min-width: 230px; height: 200px; border-radius: 20px; padding: 20px; flex-shrink: 0; position: relative; 
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .schedule-card.active {
+            background: #3b82f6; color: white; border: none; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
         }
 
         @media (max-width: 968px) {
-            .menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .header {
-                padding: 0 12px;
-            }
-
-            .header-title {
-                font-size: 18px;
-                margin-right: auto;
-                margin-left: 10px;
-            }
-
-            .datetime-info {
-                gap: 2px;
-            }
-
-            .datetime-display {
-                font-size: 11px;
-            }
-
-            .date-display {
-                font-size: 10px;
-            }
+            .main-content { margin-left: 0 !important; }
+            .menu-toggle { display: block; }
+            .header { margin: 16px; }
+        }
+        
+        .activity-item {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .icon-box {
+            width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px;
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 
 <body>
@@ -641,513 +170,486 @@
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
         <!-- Header -->
-        <header class="header">
-            <button class="menu-toggle" onclick="toggleMobileMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-            </button>
-            <h1 class="header-title" id="dashboardHeaderTitle">Dashboard Project</h1>
-            <div class="datetime-info">
-                <div class="datetime-display" id="timeDisplay">00:00:00</div>
-                <div class="date-display" id="dateDisplay">Loading...</div>
+        <header class="header glass-panel">
+            <div class="header-nav">
+                <div style="display: flex; align-items: center;">
+                    <button class="menu-toggle" onclick="toggleMobileMenu()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Live Clock Pill -->
+                <div class="clock-pill" id="liveClock">
+                    <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-right: 12px; text-align: right; line-height: 1.2;">
+                        <span id="clockDay">SENIN</span><br>
+                        <span id="clockDate" style="color: #1e293b; font-size: 11px;">25 Mei 2026</span>
+                    </div>
+                    <div style="font-size: 20px; font-weight: 700; color: #3b82f6; letter-spacing: 1px;" id="clockTime">
+                        00:43:40
+                    </div>
+                </div>
+
+                <div class="header-right-group" style="display: flex; align-items: center; gap: 16px;">
+                    <!-- Notification -->
+                    <div style="position: relative; cursor: pointer; color: #64748b; background: rgba(255,255,255,0.8); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid white;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span style="position: absolute; top: -2px; right: 0px; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid white;"></span>
+                    </div>
+                    <!-- Avatar -->
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
+                        AD
+                    </div>
+                    <!-- Keluar -->
+                    <div style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #1e293b; margin-left: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Keluar
+                    </div>
+                </div>
             </div>
         </header>
 
         <!-- Dashboard Content -->
         <div class="dashboard-content">
-            <!-- Top Row: Timeline + Final RAB Card -->
-            <div class="top-row">
-                <!-- Timeline Section -->
-                <div class="timeline-section">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                        <h3 class="timeline-title" id="timelineTitle">Timeline Project</h3>
-                        <button onclick="openAddTimelineModal()"
-                            style="background: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">+
-                            Tambah Timeline</button>
-                    </div>
-                    <div class="timeline-wrapper">
-                        <div class="timeline-container">
-                            <div class="timeline-line"></div>
-                            <div class="timeline-progress" id="timelineProgress"></div>
-                            <div class="timeline-dots" id="timelineDots">
-                                <!-- Timeline items akan dirender via JavaScript dari API -->
+            
+            <div class="row">
+                <!-- Top Left: Jadwal Hari Ini (Schedule) -->
+                <div class="col-md-8">
+                    <div class="card glass-panel h-100">
+                        <div class="card-body" style="padding: 24px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title" style="margin: 0; font-size: 15px;">Jadwal Hari Ini</h5>
+                                        <span style="color: #64748b; font-size: 11px;" id="jadwalDateSub">Senin, 25 Mei 2026</span>
+                                    </div>
+                                </div>
+                                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;">4 agenda</span>
+                            </div>
+                            
+                            <div class="schedule-scroll">
+                                <!-- Active Card -->
+                                <div class="schedule-card active">
+                                    <div>
+                                        <div style="background: rgba(255,255,255,0.2); color: white; font-size: 9px; font-weight: bold; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; margin-bottom: 12px; gap: 4px;">
+                                            <div style="width: 6px; height: 6px; background: white; border-radius: 50%;"></div> SEKARANG
+                                        </div>
+                                        <h4 style="font-size: 15px; font-weight: 600; margin: 0;">Rapat Koordinasi Tim</h4>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; margin-bottom: 8px; color: rgba(255,255,255,0.9);">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            08:00 - 09:00
+                                        </div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; color: rgba(255,255,255,0.9);">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                            Ruang Meeting A
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Upcoming Card 1 -->
+                                <div class="schedule-card">
+                                    <div>
+                                        <h4 style="color: #1e293b; font-size: 14px; font-weight: 600; margin: 0; margin-top: 4px;">Review Progress Material</h4>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; margin-bottom: 8px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            10:30 - 11:30
+                                        </div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                            Ruang Teknis
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Upcoming Card 2 -->
+                                <div class="schedule-card">
+                                    <div>
+                                        <h4 style="color: #1e293b; font-size: 14px; font-weight: 600; margin: 0; margin-top: 4px;">Evaluasi Anggaran Bulanan</h4>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; margin-bottom: 8px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            13:00 - 14:00
+                                        </div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                            Ruang Direksi
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Upcoming Card 3 -->
+                                <div class="schedule-card">
+                                    <div>
+                                        <h4 style="color: #1e293b; font-size: 14px; font-weight: 600; margin: 0; margin-top: 4px;">Site Visit PT Ma...</h4>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; margin-bottom: 8px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            15:00 - 16:00
+                                        </div>
+                                        <div style="display: flex; align-items: center; font-size: 11px; color: #64748b;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                            Lokasi Proyek
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Final RAB Card -->
-                <div class="final-rab-card">
-                    <div class="final-rab-title" id="finalRabTitle">TOTAL TERPAKAI / BUDGET AWAL</div>
-                    <div class="final-rab-value-row">
-                        <div id="finalRabValue" style="font-size: 32px; font-weight: 700;">Rp 0</div>
-                        <div id="finalRabBudget" style="font-size: 32px; font-weight: 700;">Rp 0</div>
+                <!-- Top Right: 4 Small Status Cards -->
+                <div class="col-md-4">
+                    <div class="row" style="margin-bottom: 0;">
+                        <!-- Jasa -->
+                        <div class="col-md-6 col-6">
+                            <div class="card glass-panel h-100" style="padding: 24px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </div>
+                                <span style="font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1.2px; margin-bottom: 6px; text-transform: uppercase;">Jasa</span>
+                                <h3 style="font-size: 1.45rem; font-weight: 700; color: #1e293b; margin: 0;" id="statusJasaValue">Rp 0</h3>
+                            </div>
+                        </div>
+                        <!-- Material -->
+                        <div class="col-md-6 col-6">
+                            <div class="card glass-panel h-100" style="padding: 24px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: #22c55e; color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                                </div>
+                                <span style="font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1.2px; margin-bottom: 6px; text-transform: uppercase;">Material</span>
+                                <h3 style="font-size: 1.45rem; font-weight: 700; color: #1e293b; margin: 0;" id="statusMaterialValue">Rp 0</h3>
+                            </div>
+                        </div>
                     </div>
-                    <div class="final-rab-remaining" id="finalRabRemaining">Sisa: Rp 0</div>
-                    <div class="final-rab-details">
-                        <div class="final-rab-detail-item">
-                            <div class="final-rab-detail-label">Jasa</div>
-                            <div class="final-rab-detail-value" id="finalJasaValue">Rp 0</div>
+
+                    <div class="row" style="margin-bottom: 0;">
+                        <!-- Petty Cash -->
+                        <div class="col-md-6 col-6" style="margin-bottom: 0;">
+                            <div class="card glass-panel h-100" style="padding: 24px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: #a855f7; color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(168,85,247,0.3);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                </div>
+                                <span style="font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1.2px; margin-bottom: 6px; text-transform: uppercase;">Petty Cash</span>
+                                <h3 style="font-size: 1.45rem; font-weight: 700; color: #1e293b; margin: 0;" id="statusPettyCashValue">Rp 0</h3>
+                            </div>
                         </div>
-                        <div class="final-rab-detail-item">
-                            <div class="final-rab-detail-label">Material</div>
-                            <div class="final-rab-detail-value" id="finalMaterialValue">Rp 0</div>
-                        </div>
-                        <div class="final-rab-detail-item">
-                            <div class="final-rab-detail-label">Overhead</div>
-                            <div class="final-rab-detail-value" id="finalOverheadValue">Rp 0</div>
-                        </div>
-                        <div class="final-rab-detail-item">
-                            <div class="final-rab-detail-label">Petty Cash</div>
-                            <div class="final-rab-detail-value" id="finalPettyCashValue">Rp 0</div>
+                        <!-- Overhead -->
+                        <div class="col-md-6 col-6" style="margin-bottom: 0;">
+                            <div class="card glass-panel h-100" style="padding: 24px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: #f97316; color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(249,115,22,0.3);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                                </div>
+                                <span style="font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1.2px; margin-bottom: 6px; text-transform: uppercase;">Overhead</span>
+                                <h3 style="font-size: 1.45rem; font-weight: 700; color: #1e293b; margin: 0;" id="statusOverheadValue">Rp 0</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Chart Section -->
-            <div class="chart-section">
-                <div class="chart-header">
-                    <h3 class="chart-title" id="chartTitle">Perbandingan RAB vs Budget Awal</h3>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #00a6ca;"></div>
-                            <span>Jasa</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #f39c12;"></div>
-                            <span>Material</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #e74c3c;"></div>
-                            <span>Overhead</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #2ecc71;"></div>
-                            <span>Petty Cash</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color"
-                                style="background: rgba(0,166,202,0.35); border: 2px solid #00a6ca;"></div>
-                            <span>Terpakai</span>
+            <div class="row">
+                <!-- Middle Left: Bar Chart -->
+                <div class="col-md-8">
+                    <div class="card glass-panel" style="height: 100%;">
+                        <div class="card-body">
+                            <h5 class="card-title" style="margin-bottom: 4px; font-size: 15px;">Budget vs Terpakai</h5>
+                            <p style="font-size: 11px; color: #64748b; margin-bottom: 12px;">Perbandingan budget dan pengeluaran per kategori</p>
+                            <div class="chart-container" style="height: 420px;">
+                                <canvas id="barChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="chart-container">
-                    <canvas id="comparisonChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Status Cards -->
-            <div class="status-cards">
-                <!-- Jasa Card -->
-                <div class="status-card jasa">
-                    <div class="status-header">
-                        <div class="status-icon" style="background: rgba(0,166,202,0.1);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="var(--jasa-color)" stroke-width="2">
-                                <path
-                                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
-                                </path>
-                            </svg>
+                <!-- Middle Right: Doughnut Chart -->
+                <div class="col-md-4">
+                    <div class="card glass-panel" style="height: 100%;">
+                        <div class="card-body" style="padding-bottom: 16px; display: flex; flex-direction: column;">
+                            <h5 class="card-title" style="font-size: 15px;">Budget vs Terpakai</h5>
+                            <div class="chart-container" style="flex: 1; min-height: 200px; margin-bottom: 20px;">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                            
+                            <!-- Total Terpakai & Sisa Budget Summary -->
+                            <div style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div>
+                                        <div style="font-size: 9px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase;">Total Terpakai</div>
+                                        <div style="font-weight: 700; color: #3b82f6; font-size: 1rem;" id="finalRabValue">Rp 0</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 9px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase;">Sisa Budget</div>
+                                        <div style="font-weight: 700; color: #22c55e; font-size: 1rem;" id="finalRabRemaining">Rp 0</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; margin-top: 16px; font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase;">
+                                    Budget Awal: <span id="finalRabBudget" style="font-weight: 700; color: #1e293b;">Rp 0</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="status-title">Jasa</span>
-                    </div>
-                    <div class="status-value" id="statusJasaValue">Rp 0</div>
-                    <div class="status-progress">
-                        <div class="status-progress-bar" id="progressJasa"
-                            style="width: 0%; background: var(--jasa-color);"></div>
-                    </div>
-                    <div class="status-footer">
-                        <span id="targetJasa">Target: Rp 0</span>
-                        <span id="percentJasa">0%</span>
-                    </div>
-                </div>
-
-                <!-- Material Card -->
-                <div class="status-card material">
-                    <div class="status-header">
-                        <div class="status-icon" style="background: rgba(243,156,18,0.1);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="var(--material-color)" stroke-width="2">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                            </svg>
-                        </div>
-                        <span class="status-title">Material</span>
-                    </div>
-                    <div class="status-value" id="statusMaterialValue">Rp 0</div>
-                    <div class="status-progress">
-                        <div class="status-progress-bar" id="progressMaterial"
-                            style="width: 0%; background: var(--material-color);"></div>
-                    </div>
-                    <div class="status-footer">
-                        <span id="targetMaterial">Target: Rp 0</span>
-                        <span id="percentMaterial">0%</span>
-                    </div>
-                </div>
-
-                <!-- Overhead Card -->
-                <div class="status-card overhead">
-                    <div class="status-header">
-                        <div class="status-icon" style="background: rgba(231,76,60,0.1);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="var(--overhead-color)" stroke-width="2">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                            </svg>
-                        </div>
-                        <span class="status-title">Overhead</span>
-                    </div>
-                    <div class="status-value" id="statusOverheadValue">Rp 0</div>
-                    <div class="status-progress">
-                        <div class="status-progress-bar" id="progressOverhead"
-                            style="width: 0%; background: var(--overhead-color);"></div>
-                    </div>
-                    <div class="status-footer">
-                        <span id="targetOverhead">Target: Rp 0</span>
-                        <span id="percentOverhead">0%</span>
-                    </div>
-                </div>
-
-                <!-- Petty Cash Card -->
-                <div class="status-card patty-cash">
-                    <div class="status-header">
-                        <div class="status-icon" style="background: rgba(46,204,113,0.1);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="var(--patty-cash-color)" stroke-width="2">
-                                <circle cx="12" cy="12" r="2"></circle>
-                                <path
-                                    d="M2 12h2M20 12h2M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
-                                </path>
-                            </svg>
-                        </div>
-                        <span class="status-title">Petty Cash</span>
-                    </div>
-                    <div class="status-value" id="statusPettyCashValue">Rp 0</div>
-                    <div class="status-progress">
-                        <div class="status-progress-bar" id="progressPettyCash"
-                            style="width: 0%; background: var(--patty-cash-color);"></div>
-                    </div>
-                    <div class="status-footer">
-                        <span id="targetPettyCash">Target: Rp 0</span>
-                        <span id="percentPettyCash">0%</span>
                     </div>
                 </div>
             </div>
+            
+            <!-- Bottom: Aktivitas Terbaru -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card glass-panel">
+                        <div class="card-body">
+                            <h5 class="card-title" style="margin-bottom: 16px; font-size: 15px;">Aktivitas Terbaru</h5>
+                            
+                            <!-- Dummy Data to match Mockup -->
+                            <div class="activity-item">
+                                <div style="display: flex; align-items: center;">
+                                    <div class="icon-box" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #1e293b; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                                            Invoice #INV-2024-043 
+                                            <span style="font-size: 9px; font-weight: 700; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 12px; text-transform: uppercase;">Jasa</span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Pembayaran jasa tukang</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: #1e293b; font-size: 13px;">Rp 5.200.000</div>
+                                    <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">2 jam lalu</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div style="display: flex; align-items: center;">
+                                    <div class="icon-box" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #1e293b; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                                            PO Material #MT-089 
+                                            <span style="font-size: 9px; font-weight: 700; background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 2px 8px; border-radius: 12px; text-transform: uppercase;">Material</span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Pembelian semen 50 sak</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: #1e293b; font-size: 13px;">Rp 3.750.000</div>
+                                    <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">5 jam lalu</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
     <script>
-        const dashboardProjectId = Number('{{ dashboard_project_id or "" }}') || null;
+        const dashboardProjectId = Number('{{ dashboard_project_id|default:"" }}') || null;
         let comparisonChart = null;
+        let barChartInstance = null;
+
+        // --- Live Clock Script ---
+        function updateLiveClock() {
+            const now = new Date();
+            const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            document.getElementById('clockDay').textContent = days[now.getDay()];
+            document.getElementById('clockDate').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+            
+            document.getElementById('jadwalDateSub').textContent = `${days[now.getDay()].charAt(0) + days[now.getDay()].slice(1).toLowerCase()}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+            
+            const timeStr = now.toLocaleTimeString('id-ID', { hour12: false });
+            document.getElementById('clockTime').textContent = timeStr.replace(/\./g, ':');
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+        // ------------------------
 
         function formatRupiah(value) {
             return 'Rp ' + Math.round(value || 0).toLocaleString('id-ID');
         }
 
-        function computeRabTotal(item) {
-            if (item.total !== null && item.total !== undefined) {
-                return Number(item.total) || 0;
-            }
-            const volume = Number(item.volume) || 0;
-            const hargaSatuan = Number(item.harga_satuan) || 0;
-            return volume * hargaSatuan;
+        function formatShortRupiah(value) {
+            if (value >= 1000000000) return (value / 1000000000).toFixed(1) + 'M';
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'jt';
+            if (value >= 1000) return (value / 1000).toFixed(1) + 'rb';
+            return value.toString();
         }
 
+        function computeRabTotal(item) {
+            if (item.total !== null && item.total !== undefined) { return Number(item.total) || 0; }
+            return (Number(item.volume) || 0) * (Number(item.harga_satuan) || 0);
+        }
 
         function applyStatusCard(categoryKey, remaining, budget, spent) {
             const percentage = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
             const suffix = categoryKey === 'patty_cash' ? 'PettyCash' : categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
 
             const valueEl = document.getElementById(`status${suffix}Value`);
-            const targetEl = document.getElementById(`target${suffix}`);
-            const percentEl = document.getElementById(`percent${suffix}`);
-            const progressEl = document.getElementById(`progress${suffix}`);
+            if (valueEl) valueEl.textContent = formatRupiah(spent);
+        }
 
-            if (valueEl) valueEl.textContent = formatRupiah(remaining);
-            if (targetEl) targetEl.textContent = `Budget RAB: ${formatRupiah(budget)}`;
-            if (percentEl) percentEl.textContent = `${Math.round(percentage)}% terpakai`;
-            if (progressEl) progressEl.style.width = `${percentage}%`;
+        function renderBarChart(rabTotals, actualSpending) {
+            const chartElement = document.getElementById('barChart');
+            if (!chartElement) return;
+            const ctx = chartElement.getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jasa', 'Material', 'Petty Cash', 'Overhead'],
+                    datasets: [
+                        {
+                            label: 'Budget',
+                            data: [rabTotals.jasa, rabTotals.material, rabTotals.patty_cash, rabTotals.overhead],
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.8
+                        },
+                        {
+                            label: 'Terpakai',
+                            data: [actualSpending.jasa, actualSpending.material, actualSpending.patty_cash, actualSpending.overhead],
+                            backgroundColor: '#7dd3fc',
+                            borderRadius: 4,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11, family: "'Public Sans', sans-serif" }, color: '#64748b' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.dataset.label + ': ' + formatRupiah(context.raw); }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11, family: "'Public Sans', sans-serif" }, color: '#64748b' }, border: {display: false} },
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.03)', borderDash: [5, 5] },
+                            border: {display: false},
+                            ticks: { callback: function(value) { return value > 0 ? formatShortRupiah(value) : '0'; }, font: { size: 11, family: "'Public Sans', sans-serif" }, color: '#64748b', maxTicksLimit: 6 }
+                        }
+                    }
+                }
+            });
         }
 
         function renderComparisonChart(projectName, rabTotals, actualSpending) {
-            console.log('renderComparisonChart called with:', { projectName, rabTotals, actualSpending });
-
             const chartElement = document.getElementById('comparisonChart');
-            if (!chartElement) {
-                console.error('❌ Chart canvas element not found!');
-                return;
-            }
-
-            console.log('✅ Chart canvas element found');
-
+            if (!chartElement) return;
             const ctx = chartElement.getContext('2d');
-            if (!ctx) {
-                console.error('❌ Cannot get 2D context from canvas');
-                return;
-            }
+            if (comparisonChart) comparisonChart.destroy();
 
-            if (comparisonChart) {
-                console.log('Destroying existing chart');
-                comparisonChart.destroy();
-            }
+            const totalBudget = (rabTotals.jasa || 0) + (rabTotals.material || 0) + (rabTotals.overhead || 0) + (rabTotals.patty_cash || 0);
+            const totalSpent = (actualSpending.jasa || 0) + (actualSpending.material || 0) + (actualSpending.overhead || 0) + (actualSpending.patty_cash || 0);
+            const percentage = totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : 0;
+            const remaining = Math.max(0, totalBudget - totalSpent);
 
-            try {
-                comparisonChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Jasa', 'Material', 'Overhead', 'Petty Cash'],
-                        datasets: [
-                            {
-                                label: 'Budget RAB',
-                                data: [rabTotals.jasa, rabTotals.material, rabTotals.overhead, rabTotals.patty_cash],
-                                backgroundColor: ['rgba(0,166,202,0.85)', 'rgba(243,156,18,0.85)', 'rgba(231,76,60,0.85)', 'rgba(46,204,113,0.85)'],
-                                borderWidth: 1,
-                                borderColor: '#fff'
-                            },
-                            {
-                                label: 'Terpakai',
-                                data: [actualSpending.jasa, actualSpending.material, actualSpending.overhead, actualSpending.patty_cash],
-                                backgroundColor: ['rgba(0,166,202,0.35)', 'rgba(243,156,18,0.35)', 'rgba(231,76,60,0.35)', 'rgba(46,204,113,0.35)'],
-                                borderColor: ['#00a6ca', '#f39c12', '#e74c3c', '#2ecc71'],
-                                borderWidth: 2
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return `${context.dataset.label}: ${formatRupiah(context.parsed.y)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function (value) {
-                                        return formatRupiah(value);
-                                    }
+            comparisonChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Terpakai', 'Sisa Budget'],
+                    datasets: [{
+                        data: (totalBudget === 0 && totalSpent === 0) ? [0, 1] : [totalSpent, remaining],
+                        backgroundColor: ['#3b82f6', '#eff6ff'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    circumference: 360,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if(totalBudget === 0 && totalSpent === 0 && context.dataIndex === 1) return 'Tidak ada data';
+                                    return context.label + ': ' + formatRupiah(context.raw);
                                 }
                             }
                         }
                     }
-                });
-                console.log('✅ Chart created and rendered successfully');
-            } catch (error) {
-                console.error('❌ Chart creation failed:', error);
-            }
-        }
+                },
+                plugins: [{
+                    id: 'custom_center_text',
+                    beforeDraw: function(chart) {
+                        var width = chart.width, height = chart.height, ctx = chart.ctx;
+                        ctx.restore();
+                        var fontSize = '26';
+                        ctx.font = 'bold ' + fontSize + 'px "Public Sans", sans-serif';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#3b82f6';
 
-        async function renderTimelineFromData(projectName, timelineItems) {
-            const timelineDotsContainer = document.querySelector('.timeline-dots');
-            if (!timelineDotsContainer || !timelineItems || timelineItems.length === 0) {
-                const container = document.querySelector('.timeline-container');
-                if (container) container.style.display = 'none';
-                return;
-            }
+                        var text = percentage + '%',
+                            textX = Math.round((width - ctx.measureText(text).width) / 2),
+                            textY = height / 2 - 10;
 
-            const container = document.querySelector('.timeline-container');
-            if (container) container.style.display = 'inline-flex';
-
-            let html = '';
-            // Sort by number just to be safe
-            timelineItems.sort((a,b) => a.number - b.number);
-            
-            timelineItems.forEach(item => {
-                const date = new Date(item.tanggal);
-                const dayName = new Intl.DateTimeFormat('id-ID', { weekday: 'short' }).format(date);
-                const datePart = new Intl.DateTimeFormat('id-ID', {
-                    day: 'numeric',
-                    month: 'short'
-                }).format(date);
-                const fullDate = `${dayName}, ${datePart}`;
-
-                const statusClass = item.status === 'completed' ? 'completed' :
-                    item.status === 'in_progress' ? 'active' : '';
-
-                const icon = item.status === 'completed' ? '✓' : item.number;
-                const safeItem = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-
-                html += `
-                <div class="timeline-dot" style="cursor: pointer;" onclick='openEditTimelineModal(${safeItem})'>
-                    <div class="dot ${statusClass}" title="${item.notes || ''}">${icon}</div>
-                    <span class="dot-date">${fullDate}</span>
-                    <span class="dot-task">${item.task_name}</span>
-                </div>
-                `;
+                        ctx.fillText(text, textX, textY);
+                        
+                        ctx.font = '600 11px "Public Sans", sans-serif';
+                        ctx.fillStyle = '#94a3b8';
+                        var subText = 'Terpakai';
+                        var subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+                        ctx.fillText(subText, subTextX, textY + 22);
+                        ctx.save();
+                    }
+                }]
             });
-
-            timelineDotsContainer.innerHTML = html;
-
-            // Calculate progress line
-            const progressLine = document.getElementById('timelineProgress');
-            if (progressLine && timelineItems.length > 1) {
-                let lastActiveIndex = -1;
-                timelineItems.forEach((item, idx) => {
-                    if (item.status === 'completed' || item.status === 'in_progress') {
-                        lastActiveIndex = Math.max(lastActiveIndex, idx);
-                    }
-                });
-                
-                // Animate progress after render
-                setTimeout(() => {
-                    if (lastActiveIndex > 0) {
-                        const ratio = lastActiveIndex / (timelineItems.length - 1);
-                        progressLine.style.width = `calc((100% - 120px) * ${ratio})`;
-                    } else {
-                        progressLine.style.width = '0%';
-                    }
-                }, 100);
-            } else if (progressLine) {
-                progressLine.style.width = '0%';
-            }
         }
 
         async function loadDashboardData() {
-            console.log('=== Starting loadDashboardData ===');
-            console.log('Dashboard Project ID:', dashboardProjectId);
-
-            if (!dashboardProjectId) {
-                console.warn('No dashboard project ID found');
-                document.getElementById('dashboardHeaderTitle').textContent = 'Dashboard Project';
-                return;
-            }
+            if (!dashboardProjectId) return;
 
             try {
-                // Fetch project data
-                console.log('Fetching project data for ID:', dashboardProjectId);
-                const projectRes = await fetch(`/api/projects/${dashboardProjectId}`, { credentials: 'same-origin' });
-
-                if (projectRes.status === 401) {
-                    console.error('Unauthorized - redirecting to login');
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const projectData = await projectRes.json();
-                console.log('Project data received:', projectData);
-
-                if (!projectData.success) {
-                    console.error('Project data tidak valid:', projectData);
-                    return;
-                }
-
-                const project = projectData.data;
-                const projectName = project.project_name || 'Project';
-
-                // Update header
-                document.getElementById('dashboardHeaderTitle').textContent = `Dashboard ${projectName}`;
-
-                // Fetch RAB data
                 let rabItems = [];
                 try {
                     const rabRes = await fetch(`/api/projects/${dashboardProjectId}/rab`, { credentials: 'same-origin' });
-                    if (rabRes.ok) {
-                        const rabData = await rabRes.json();
-                        rabItems = rabData.success ? rabData.data : [];
-                    }
-                } catch (e) {
-                    console.warn('Error loading RAB data:', e);
-                }
+                    if (rabRes.ok) { const rabData = await rabRes.json(); rabItems = rabData.success ? rabData.data : []; }
+                } catch (e) {}
 
-                // Fetch timeline data
-                let timelineItems = [];
+                let actualSpending = { jasa: 0, material: 0, overhead: 0, patty_cash: 0 };
                 try {
-                    const timelineRes = await fetch(`/api/projects/${dashboardProjectId}/timeline`, { credentials: 'same-origin' });
-                    if (timelineRes.ok) {
-                        const timelineData = await timelineRes.json();
-                        timelineItems = timelineData.success ? timelineData.data : [];
-                        console.log('Timeline items loaded:', timelineItems.length);
-                    }
-                } catch (e) {
-                    console.warn('Error loading timeline data:', e);
-                }
-
-                // Fetch jasa summary, material, dan petty cash by project
-                let jasaSlipTotal = 0;
-                let materialTotal = 0;
-                let pettyCashTotal = 0;
-                try {
-                    console.log('Fetching jasa summary for project:', dashboardProjectId);
-                    console.log('Fetching materials for project:', dashboardProjectId);
-                    console.log('Fetching petty cash for project:', dashboardProjectId);
-
                     const [jasaRes, materialRes, pettyRes] = await Promise.all([
                         fetch(`/api/projects/${dashboardProjectId}/jasa-slips/summary`, { credentials: 'same-origin' }),
                         fetch(`/api/materials?project_id=${dashboardProjectId}`, { credentials: 'same-origin' }),
                         fetch(`/api/petty-cash?project_id=${dashboardProjectId}`, { credentials: 'same-origin' })
                     ]);
 
-                    if (jasaRes.ok) {
-                        const jasaData = await jasaRes.json();
-                        jasaSlipTotal = Number(jasaData.summary?.total_bayar) || 0;
-                        console.log('Jasa slip total from summary API:', jasaSlipTotal);
-                    } else {
-                        console.error('Jasa summary API error:', jasaRes.status, jasaRes.statusText);
-                    }
+                    if (jasaRes.ok) { const data = await jasaRes.json(); actualSpending.jasa = Number(data.summary?.total_bayar) || 0; }
+                    if (materialRes.ok) { const data = await materialRes.json(); actualSpending.material = (data.data || []).reduce((s, i) => s + (Number(i.price) || 0), 0); }
+                    if (pettyRes.ok) { const data = await pettyRes.json(); actualSpending.patty_cash = (data.data || []).reduce((s, i) => s + (Number(i.jumlah) || 0), 0); }
+                } catch (e) {}
 
-                    if (materialRes.ok) {
-                        const materialData = await materialRes.json();
-                        console.log('Material API response:', materialData);
-                        const items = materialData.success ? materialData.data : [];
-                        // Sum all material prices for this project
-                        materialTotal = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-                        console.log('Material total from API:', materialTotal, 'items count:', items.length);
-                    } else {
-                        console.error('Material API error:', materialRes.status, materialRes.statusText);
-                    }
-
-                    if (pettyRes.ok) {
-                        const pettyData = await pettyRes.json();
-                        console.log('Petty Cash API response:', pettyData);
-                        const items = pettyData.success ? pettyData.data : [];
-                        // Sum all petty cash jumlah for this project
-                        pettyCashTotal = items.reduce((sum, item) => sum + (Number(item.jumlah) || 0), 0);
-                        console.log('Petty cash total from API:', pettyCashTotal, 'items count:', items.length);
-                    } else {
-                        console.error('Petty Cash API error:', pettyRes.status, pettyRes.statusText);
-                    }
-                } catch (e) {
-                    console.error('Error loading material/petty-cash data:', e);
-                }
-
-                // ── Hitung RAB Budget per kategori ────────────────────────────
-                console.log('=== Calculating RAB Budgets ===');
                 const rabTotals = { jasa: 0, material: 0, overhead: 0, patty_cash: 0 };
-
-                console.log('RAB Items to process:', rabItems.length);
                 rabItems.forEach(item => {
                     const key = item.kategori;
-                    if (!(key in rabTotals)) {
-                        console.warn('Unknown kategori in RAB:', key);
-                        return;
-                    }
-                    const itemTotal = computeRabTotal(item);
-                    console.log(`RAB Budget - ${key}: ${itemTotal}`);
-                    rabTotals[key] += itemTotal;
+                    if (key in rabTotals) { rabTotals[key] += computeRabTotal(item); }
                 });
 
-                console.log('RAB Budgets:', rabTotals);
-
-                // ── Actual spending dari modul Material & Petty Cash ─────────
-                const actualSpending = {
-                    jasa: jasaSlipTotal,
-                    material: materialTotal,
-                    overhead: 0,
-                    patty_cash: pettyCashTotal
-                };
-                console.log('Actual Spending:', actualSpending);
-
-                // ── Sisa budget = RAB - Terpakai ─────────────────────────────
                 const remaining = {
                     jasa: Math.max(0, rabTotals.jasa - actualSpending.jasa),
                     material: Math.max(0, rabTotals.material - actualSpending.material),
@@ -1156,285 +658,29 @@
                 };
 
                 const totalRabBudget = rabTotals.jasa + rabTotals.material + rabTotals.overhead + rabTotals.patty_cash;
-                const totalRemaining = remaining.jasa + remaining.material + remaining.overhead + remaining.patty_cash;
                 const totalActual = actualSpending.jasa + actualSpending.material + actualSpending.overhead + actualSpending.patty_cash;
-                const budgetAwal = Number(project.amount) || totalRabBudget;
-
-                console.log('RAB Total Budget:', totalRabBudget, 'Total Actual:', totalActual, 'Total Remaining:', totalRemaining);
-
-                // ── Update UI ─────────────────────────────────────────────────
-                document.getElementById('timelineTitle').textContent = `Timeline ${projectName}${timelineItems.length > 0 ? '' : ' - 7 Hari'}`;
-                document.getElementById('finalRabTitle').textContent = `TOTAL TERPAKAI / BUDGET AWAL`;
-                document.getElementById('chartTitle').textContent = `Budget RAB vs Terpakai - ${projectName}`;
+                const totalRemaining = totalRabBudget - totalActual;
 
                 document.getElementById('finalRabValue').textContent = formatRupiah(totalActual);
                 document.getElementById('finalRabBudget').textContent = formatRupiah(totalRabBudget);
-                document.getElementById('finalRabRemaining').textContent = `Sisa: ${formatRupiah(totalRemaining)}`;
-                document.getElementById('finalJasaValue').textContent = formatRupiah(remaining.jasa);
-                document.getElementById('finalMaterialValue').textContent = formatRupiah(remaining.material);
-                document.getElementById('finalOverheadValue').textContent = formatRupiah(remaining.overhead);
-                document.getElementById('finalPettyCashValue').textContent = formatRupiah(remaining.patty_cash);
+                document.getElementById('finalRabRemaining').textContent = formatRupiah(totalRemaining);
 
                 applyStatusCard('jasa', remaining.jasa, rabTotals.jasa, actualSpending.jasa);
                 applyStatusCard('material', remaining.material, rabTotals.material, actualSpending.material);
                 applyStatusCard('overhead', remaining.overhead, rabTotals.overhead, actualSpending.overhead);
                 applyStatusCard('patty_cash', remaining.patty_cash, rabTotals.patty_cash, actualSpending.patty_cash);
 
-                // Render chart
-                try {
-                    console.log('=== Rendering Comparison Chart ===');
-                    renderComparisonChart(projectName, rabTotals, actualSpending);
-                    console.log('✅ Chart rendered successfully');
-                } catch (e) {
-                    console.error('❌ Error rendering chart:', e);
-                }
+                renderComparisonChart('', rabTotals, actualSpending);
+                renderBarChart(rabTotals, actualSpending);
 
-                // Render timeline
-                try {
-                    console.log('=== Rendering Timeline ===');
-                    console.log('Timeline items count:', timelineItems.length);
-                    await renderTimelineFromData(projectName, timelineItems);
-                    console.log('✅ Timeline rendered successfully');
-                } catch (e) {
-                    console.error('❌ Error rendering timeline:', e);
-                }
-
-                console.log('=== loadDashboardData completed ===');
-            } catch (error) {
-                console.error('❌ Gagal memuat dashboard project:', error);
-            }
+            } catch (error) { console.error('Error:', error); }
         }
 
         window.addEventListener('load', loadDashboardData);
-
-        /* ═══════════════════════════════════════════════════════════════ */
-        /* Timeline Management Functions */
-        /* ═══════════════════════════════════════════════════════════════ */
-
-        function openAddTimelineModal() {
-            if (!dashboardProjectId) {
-                alert('Project tidak ditemukan');
-                return;
-            }
-            document.getElementById('timelineModalTitle').textContent = 'Tambah Timeline Project';
-            document.getElementById('timelineId').value = '';
-            document.getElementById('timelineForm').reset();
-            document.getElementById('btnDeleteTimeline').style.display = 'none';
-
-            const modal = document.getElementById('addTimelineModal');
-            modal.style.display = 'flex';
-            // Trigger animation by adding open class after display change
-            setTimeout(() => {
-                modal.classList.add('open');
-            }, 10);
-        }
-
-        function openEditTimelineModal(item) {
-            document.getElementById('timelineModalTitle').textContent = 'Edit Timeline Project';
-            document.getElementById('timelineId').value = item.id;
-            document.getElementById('timelineNumber').value = item.number;
-            document.getElementById('timelineTaskName').value = item.task_name;
-            
-            let dateVal = '';
-            if (item.tanggal) {
-                dateVal = item.tanggal.split('T')[0];
-            }
-            document.getElementById('timelineTanggal').value = dateVal;
-            document.getElementById('timelineStatus').value = item.status;
-            document.getElementById('timelineNotes').value = item.notes || '';
-
-            document.getElementById('btnDeleteTimeline').style.display = 'inline-block';
-
-            const modal = document.getElementById('addTimelineModal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('open'), 10);
-        }
-
-        function closeAddTimelineModal() {
-            const modal = document.getElementById('addTimelineModal');
-            modal.classList.remove('open');
-            // Wait for animation to complete before hiding
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.getElementById('timelineForm').reset();
-            }, 300);
-        }
-
-        async function submitTimelineForm() {
-            const id = document.getElementById('timelineId').value;
-            const number = document.getElementById('timelineNumber').value;
-            const taskName = document.getElementById('timelineTaskName').value;
-            const tanggal = document.getElementById('timelineTanggal').value;
-            const status = document.getElementById('timelineStatus').value;
-            const notes = document.getElementById('timelineNotes').value;
-
-            if (!number || !taskName || !tanggal) {
-                alert('Nomor, Nama Task, dan Tanggal wajib diisi');
-                return;
-            }
-
-            const url = id ? `/api/projects/timeline/${id}` : `/api/projects/${dashboardProjectId}/timeline`;
-            const method = id ? 'PUT' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        number: parseInt(number),
-                        task_name: taskName,
-                        tanggal: tanggal,
-                        status: status,
-                        notes: notes || null
-                    })
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    alert(id ? '✅ Timeline berhasil diupdate!' : '✅ Timeline berhasil ditambahkan!');
-                    closeAddTimelineModal();
-                    // Reload timeline data
-                    loadDashboardData();
-                } else {
-                    alert('❌ Error: ' + (result.message || 'Gagal menambahkan timeline'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Terjadi kesalahan: ' + error.message);
-            }
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function (event) {
-            const timelineModal = document.getElementById('addTimelineModal');
-            if (event.target === timelineModal) {
-                closeAddTimelineModal();
-            }
-        }
-
-        async function deleteTimeline() {
-            const id = document.getElementById('timelineId').value;
-            if (!id) return;
-            if (!confirm('Apakah Anda yakin ingin menghapus timeline ini? Aksi ini tidak dapat dibatalkan.')) return;
-
-            try {
-                const response = await fetch(`/api/projects/timeline/${id}`, {
-                    method: 'DELETE',
-                    credentials: 'same-origin'
-                });
-                
-                if (response.status === 401) { window.location.href = '/login'; return; }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('✅ Timeline berhasil dihapus!');
-                    closeAddTimelineModal();
-                    loadDashboardData();
-                } else {
-                    alert('❌ Error: ' + (result.message || 'Gagal menghapus timeline'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Terjadi kesalahan: ' + error.message);
-            }
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('open');
         }
     </script>
-
-    <!-- Modal Add Timeline -->
-    <div id="addTimelineModal" class="modal-backdrop">
-        <div class="modal-content-wrapper">
-            <h2 id="timelineModalTitle" style="margin-top: 0; color: #333; margin-bottom: 25px;">Tambah Timeline Project</h2>
-
-            <form id="timelineForm" class="modal-form">
-                <input type="hidden" id="timelineId" value="">
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Nomor
-                        Tahap</label>
-                    <input type="number" id="timelineNumber" min="1" placeholder="Contoh: 1" class="form-input">
-                </div>
-
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Nama
-                        Task</label>
-                    <input type="text" id="timelineTaskName" placeholder="Contoh: Kickoff Meeting" class="form-input">
-                </div>
-
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Tanggal</label>
-                    <input type="date" id="timelineTanggal" class="form-input">
-                </div>
-
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Status</label>
-                    <select id="timelineStatus" class="form-select">
-                        <option value="planned">Planned (Putih)</option>
-                        <option value="in_progress">In Progress (Biru)</option>
-                        <option value="completed">Completed (Hijau)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">Catatan
-                        (Opsional)</label>
-                    <textarea id="timelineNotes" placeholder="Masukkan catatan penting..."
-                        class="form-textarea"></textarea>
-                </div>
-
-                <div class="modal-button-group">
-                    <button type="button" onclick="submitTimelineForm()" class="modal-btn modal-btn-primary">Simpan
-                        Timeline</button>
-                    <button type="button" id="btnDeleteTimeline" onclick="deleteTimeline()" class="modal-btn" style="background: #ef4444; color: white; display: none;">Hapus</button>
-                    <button type="button" onclick="closeAddTimelineModal()"
-                        class="modal-btn modal-btn-secondary">Batal</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Update datetime display
-        function updateDateTime() {
-            const now = new Date();
-
-            // Format time: HH:MM:SS
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const timeString = `${hours}:${minutes}:${seconds}`;
-
-            // Format date: Hari, DD Bulan YYYY
-            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-            const dayName = days[now.getDay()];
-            const date = String(now.getDate()).padStart(2, '0');
-            const monthName = months[now.getMonth()];
-            const year = now.getFullYear();
-            const dateString = `${dayName}, ${date} ${monthName} ${year}`;
-
-            // Update display
-            document.getElementById('timeDisplay').textContent = timeString;
-            document.getElementById('dateDisplay').textContent = dateString;
-        }
-
-        // Update every second
-        setInterval(updateDateTime, 1000);
-        // Initial update
-        updateDateTime();
-    </script>
-
 </body>
-
 </html>

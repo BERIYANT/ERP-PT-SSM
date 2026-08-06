@@ -13,14 +13,14 @@
         }
         
         :root {
-            --primary-color: #00a6ca;
-            --secondary-color: #00c9a7;
-            --gradient: linear-gradient(90deg, #00a6ca 0%, #00c9a7 100%);
+            --primary-color: #125BFB;
+            --secondary-color: #125BFB;
+            --gradient: #125BFB;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --header-height: 70px;
-            --card-shadow: 0 4px 15px rgba(0, 166, 202, 0.15);
-            --hover-shadow: 0 6px 20px rgba(0, 166, 202, 0.25);
+            --card-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+            --hover-shadow: 0 4px 12px 0 rgba(67, 89, 113, 0.16);
             --success-color: #2ecc71;
             --warning-color: #f39c12;
             --danger-color: #e74c3c;
@@ -31,7 +31,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
+            background-color: #f5f5f9;
             color: #333;
             overflow-x: hidden;
         }
@@ -93,7 +93,7 @@
         .toggle-btn {
             width: 30px;
             height: 30px;
-            background: var(--gradient);
+            background: #ffffff;
             border: none;
             border-radius: 8px;
             color: white;
@@ -292,7 +292,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--gradient);
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -349,7 +349,7 @@
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: var(--gradient);
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -507,7 +507,7 @@
         }
         
         .btn-primary {
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
         }
         
@@ -664,7 +664,7 @@
         
         .modal-header {
             padding: 15px 20px;
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
             display: flex;
             justify-content: space-between;
@@ -771,7 +771,7 @@
             font-size: 14px;
             font-weight: 600;
             border-radius: 30px;
-            background: var(--gradient);
+            background: #ffffff;
             color: white;
             border: none;
             cursor: pointer;
@@ -881,6 +881,7 @@
             }
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -957,10 +958,25 @@
                 </svg>
             </button>
             <h1 class="header-title">Profile</h1>
-            <div class="user-info" onclick="window.location.href='profile.html'">
-                <div class="user-avatar">MJ</div>
-                <span class="user-name">{{ (current_user.role or "-")|capitalize }}</span>
+            
+        
+            <div class="header-right-group" style="display: flex; align-items: center; gap: 20px;">
+                <div class="user-profile-header">
+                    <div class="user-profile-avatar-header">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
+                    <div class="user-profile-info-header">
+                        <div class="user-profile-name-header">{{ current_user.nama|default:'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role|default:'User' }}</div>
+                    </div>
+                    <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
+
         </header>
         
         <!-- Content -->
@@ -968,10 +984,10 @@
             <!-- Profile Header -->
             <div class="form-section">
                 <div class="profile-header">
-                    <div class="profile-avatar-large">{{ (current_user.nama or "U")[:2]|upper }}</div>
+                    <div class="profile-avatar-large">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
                     <div class="profile-info">
-                        <div class="profile-name">{{ current_user.nama or "-" }}</div>
-                        <div class="profile-role">{{ (current_user.role or "-")|capitalize }}</div>
+                        <div class="profile-name">{{ current_user.nama|default:'-' }}</div>
+                        <div class="profile-role">{{ current_user.role|default:'-'|capfirst }}</div>
                         <div class="profile-badges">
                             <span class="profile-badge">Verified</span>
                             <span class="profile-badge">Full Access</span>
@@ -1001,11 +1017,11 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Nama Lengkap</div>
-                            <div class="detail-value">{{ current_user.nama or "-" }}</div>
+                            <div class="detail-value">{{ current_user.nama|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Role</div>
-                            <div class="detail-value">{{ (current_user.role or "-")|capitalize }}</div>
+                            <div class="detail-value">{{ current_user.role|default:'-'|capfirst }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Bergabung</div>
@@ -1024,15 +1040,15 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Email</div>
-                            <div class="detail-value">{{ current_user.email or "-" }}</div>
+                            <div class="detail-value">{{ current_user.email|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">No. Telepon</div>
-                            <div class="detail-value">{{ current_user.phone or "-" }}</div>
+                            <div class="detail-value">{{ current_user.phone|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Alamat</div>
-                            <div class="detail-value">{{ current_user.jabatan or "-" }}</div>
+                            <div class="detail-value">{{ current_user.jabatan|default:'-' }}</div>
                         </div>
                     </div>
                 </div>
@@ -1050,29 +1066,29 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Nama Lengkap</label>
-                            <input type="text" id="fullName" value="{{ current_user.nama or "-" }}" placeholder="Nama lengkap">
+                            <input type="text" id="fullName" value="{{ current_user.nama|default:'-' }}" placeholder="Nama lengkap">
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" id="email" value="{{ current_user.email or "-" }}" placeholder="Email">
+                            <input type="email" id="email" value="{{ current_user.email|default:'-' }}" placeholder="Email">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>No. Telepon</label>
-                            <input type="text" id="phone" value="{{ current_user.phone or "-" }}" placeholder="No. telepon">
+                            <input type="text" id="phone" value="{{ current_user.phone|default:'-' }}" placeholder="No. telepon">
                         </div>
                         <div class="form-group">
                             <label>Role</label>
-                            <input type="text" value="{{ (current_user.role or "-")|capitalize }}" placeholder="Role" readonly>
+                            <input type="text" value="{{ current_user.role|default:'-'|capfirst }}" placeholder="Role" readonly>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>Alamat</label>
-                            <textarea id="address" rows="2" placeholder="Alamat lengkap">{{ current_user.jabatan or "-" }}</textarea>
+                            <textarea id="address" rows="2" placeholder="Alamat lengkap">{{ current_user.jabatan|default:'-' }}</textarea>
                         </div>
                     </div>
 
@@ -1324,57 +1340,17 @@
             { id: 3, projectName: 'Project C', status: 'active' }
         ];
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
         
-        function toggleSubmenu(id, event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const submenu = document.getElementById('submenu-' + id);
-            const arrow = document.getElementById('arrow-' + id);
-            if (submenu) {
-                submenu.classList.toggle('open');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            }
-        }
         
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
         
-        function confirmLogout(event) {
-            if (!confirm('Apakah Anda yakin ingin logout?')) {
-                event.preventDefault();
-                return false;
-            }
-            return true;
-        }
+        
+        
+        
+        
 
-        function setActiveMenuItem(element, menuId) {
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeMenu', menuId);
-        }
+        
 
-        function setActiveSubmenu(element, submenuId) {
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-            sessionStorage.setItem('activeSubmenu', submenuId);
-            return false;
-        }
+        
 
         // Switch Tab
         function switchTab(tab) {
@@ -1459,9 +1435,9 @@
             closeCancelModal();
             // Reset form ke nilai awal
             document.getElementById('fullName').value = 'Wildan';
-            document.getElementById('email').value = '{{ current_user.email or "-" }}';
-            document.getElementById('phone').value = '{{ current_user.phone or "-" }}';
-            document.getElementById('address').value = '{{ current_user.jabatan or "-" }}';
+            document.getElementById('email').value = '{{ current_user.email|default:'-' }}';
+            document.getElementById('phone').value = '{{ current_user.phone|default:'-' }}';
+            document.getElementById('address').value = '{{ current_user.jabatan|default:'-' }}';
         }
 
         function changePassword() {
@@ -1574,66 +1550,11 @@
         }
 
         // Render Sidebar Projects
-        function renderSidebarProjects() {
-            const container = document.getElementById('dynamicProjects');
-            if(!container) return;
-            
-            if (projects.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-            projects.forEach(project => {
-                const projectId = project.projectName.toLowerCase().replace(/\s+/g, '-');
-                
-                html += `
-                    <div class="menu-item" onclick="toggleSubmenu('${projectId}'); setActiveMenuItem(this, '${projectId}')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span>${project.projectName}</span>
-                        <svg class="menu-arrow" id="arrow-${projectId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </div>
-                    <div class="submenu" id="submenu-${projectId}">
-                        <a href="#jasa" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'jasa'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                            </svg>
-                            Jasa
-                        </a>
-                        <a href="#material" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'material'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                            </svg>
-                            Material
-                        </a>
-                        <a href="#overhead" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'overhead'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                            </svg>
-                            Overhead
-                        </a>
-                        <a href="#patty-cash" class="submenu-item level-2" onclick="setActiveSubmenu(this, 'patty-cash'); return false;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="2"></circle>
-                                <path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-                            </svg>
-                            Patty Cash
-                        </a>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
+        
 
         // Initialize
         window.onload = function() {
-            renderSidebarProjects();
+            
             
             // Set Profile sebagai active menu
             document.querySelectorAll('.menu-item').forEach(item => {
