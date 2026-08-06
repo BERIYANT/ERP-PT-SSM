@@ -581,6 +581,7 @@
             }
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 
 <body>
@@ -605,10 +606,10 @@
         
             
                 <div class="user-profile-header">
-                    <div class="user-profile-avatar-header">{{ (current_user.nama or 'U')[:2]|upper }}</div>
+                    <div class="user-profile-avatar-header">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
                     <div class="user-profile-info-header">
-                        <div class="user-profile-name-header">{{ current_user.nama or 'User' }}</div>
-                        <div class="user-profile-role-header">{{ current_user.role or 'User' }}</div>
+                        <div class="user-profile-name-header">{{ current_user.nama|default:'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role|default:'User' }}</div>
                     </div>
                     <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

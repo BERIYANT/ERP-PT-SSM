@@ -489,6 +489,7 @@
             }
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 
 <body>
@@ -513,10 +514,10 @@
         
             
                 <div class="user-profile-header">
-                    <div class="user-profile-avatar-header">{{ (current_user.nama or 'U')[:2]|upper }}</div>
+                    <div class="user-profile-avatar-header">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
                     <div class="user-profile-info-header">
-                        <div class="user-profile-name-header">{{ current_user.nama or 'User' }}</div>
-                        <div class="user-profile-role-header">{{ current_user.role or 'User' }}</div>
+                        <div class="user-profile-name-header">{{ current_user.nama|default:'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role|default:'User' }}</div>
                     </div>
                     <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -535,11 +536,11 @@
             <!-- Profile Header -->
             <div class="form-section">
                 <div class="profile-header">
-                    <div class="profile-avatar-large" id="profileAvatarLarge">{{ (current_user.nama or 'U')[:2]|upper }}
+                    <div class="profile-avatar-large" id="profileAvatarLarge">{{ current_user.nama|default:'U'|slice:':2'|upper }}
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name" id="profileName">{{ current_user.nama or 'User' }}</div>
-                        <div class="profile-role" id="profileRole">{{ current_user.role or 'user' }}</div>
+                        <div class="profile-name" id="profileName">{{ current_user.nama|default:'User' }}</div>
+                        <div class="profile-role" id="profileRole">{{ current_user.role|default:'user' }}</div>
                         <div class="profile-badges">
                             <span class="profile-badge">Verified</span>
                             <span class="profile-badge">Full Access</span>
@@ -569,11 +570,11 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Nama Lengkap</div>
-                            <div class="detail-value" id="detailNama">{{ current_user.nama or '-' }}</div>
+                            <div class="detail-value" id="detailNama">{{ current_user.nama|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Role</div>
-                            <div class="detail-value" id="detailRole">{{ current_user.role or '-' }}</div>
+                            <div class="detail-value" id="detailRole">{{ current_user.role|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Bergabung</div>
@@ -618,7 +619,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Nama Lengkap</label>
-                            <input type="text" id="editNama" value="{{ current_user.nama or '' }}"
+                            <input type="text" id="editNama" value="{{ current_user.nama|default:'' }}"
                                 placeholder="Nama lengkap">
                         </div>
                         <div class="form-group">
@@ -641,7 +642,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Role</label>
-                            <input type="text" value="{{ current_user.role or 'user' }}" placeholder="Role" readonly>
+                            <input type="text" value="{{ current_user.role|default:'user' }}" placeholder="Role" readonly>
                         </div>
                     </div>
 
@@ -780,7 +781,7 @@
             }
         }
 
-        const currentUserId = {{ current_user.id or 'null' }};
+        const currentUserId = {{ current_user.id|default:'null' }};
 
         // Profile Actions
         async function saveProfile() {

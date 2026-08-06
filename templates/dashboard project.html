@@ -160,6 +160,7 @@
             width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px;
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 
 <body>
@@ -456,7 +457,7 @@
     </main>
 
     <script>
-        const dashboardProjectId = Number('{{ dashboard_project_id or "" }}') || null;
+        const dashboardProjectId = Number('{{ dashboard_project_id|default:"" }}') || null;
         let comparisonChart = null;
         let barChartInstance = null;
 

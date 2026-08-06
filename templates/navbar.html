@@ -1161,22 +1161,22 @@
     <nav class="sidebar-menu" id="sidebarMenu">
 
         <!-- Master PO -->
-        <div class="menu-item {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}active{% endif %}" data-tooltip="Master PO"
+        <div class="menu-item {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}active{% endif %}" data-tooltip="Master PO"
             onclick="toggleSubmenu('master-po'); setActiveMenuItem(this, 'master-po')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
             <span>Master PO</span>
-            <svg class="menu-arrow {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}rotated{% endif %}" id="arrow-master-po" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <svg class="menu-arrow {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}rotated{% endif %}" id="arrow-master-po" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </div>
-        <div class="submenu {% if request.path.startswith('/project-po') or request.path.startswith('/project-non-po') or request.path.startswith('/master-po') %}open{% endif %}" id="submenu-master-po">
-            <a href="/project-po" class="submenu-item level-2 {% if request.path.startswith('/project-po') %}active{% endif %}"
+        <div class="submenu {% if '/project-po' in request.path or '/project-non-po' in request.path or '/master-po' in request.path %}open{% endif %}" id="submenu-master-po">
+            <a href="/project-po" class="submenu-item level-2 {% if '/project-po' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'project-po'); closeMobileMenu();">Project PO</a>
-            <a href="/project-non-po" class="submenu-item level-2 {% if request.path.startswith('/project-non-po') %}active{% endif %}"
+            <a href="/project-non-po" class="submenu-item level-2 {% if '/project-non-po' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'project-non-po'); closeMobileMenu();">Project NON-PO</a>
         </div>
 
@@ -1229,28 +1229,28 @@
         </a>
 
         <!-- Arsip is already processed... -->
-        <div class="menu-item {% if request.path.startswith('/arsip') %}active{% endif %}" data-tooltip="Arsip" onclick="toggleSubmenu('arsip'); setActiveMenuItem(this, 'arsip')">
+        <div class="menu-item {% if '/arsip' in request.path %}active{% endif %}" data-tooltip="Arsip" onclick="toggleSubmenu('arsip'); setActiveMenuItem(this, 'arsip')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="21 8 21 21 3 21 3 8"></polyline>
                 <rect x="1" y="3" width="22" height="5"></rect>
                 <line x1="10" y1="12" x2="14" y2="12"></line>
             </svg>
             <span>Arsip</span>
-            <svg class="menu-arrow {% if request.path.startswith('/arsip') %}rotated{% endif %}" id="arrow-arsip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            <svg class="menu-arrow {% if '/arsip' in request.path %}rotated{% endif %}" id="arrow-arsip" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
         </div>
-        <div class="submenu {% if request.path.startswith('/arsip') %}open{% endif %}" id="submenu-arsip">
+        <div class="submenu {% if '/arsip' in request.path %}open{% endif %}" id="submenu-arsip">
             <a href="/arsip" class="submenu-item level-2 {% if request.path == '/arsip' %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-beranda'); closeMobileMenu();">
                 Beranda
             </a>
-            <a href="/arsip/invoice" class="submenu-item level-2 {% if request.path.startswith('/arsip/invoice') %}active{% endif %}"
+            <a href="/arsip/invoice" class="submenu-item level-2 {% if '/arsip/invoice' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-invoice'); closeMobileMenu();">
                 Arsip Invoice
             </a>
-            <a href="/arsip/project" class="submenu-item level-2 {% if request.path.startswith('/arsip/project') %}active{% endif %}"
+            <a href="/arsip/project" class="submenu-item level-2 {% if '/arsip/project' in request.path %}active{% endif %}"
                 onclick="setActiveSubmenu(this, 'arsip-project'); closeMobileMenu();">
                 Arsip Project
             </a>

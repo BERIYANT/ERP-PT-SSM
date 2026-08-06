@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSM Portal - Profile {{ (current_user.role or "-")|capitalize }}</title>
+    <title>SSM Portal - Profile {{ current_user.role|default:'-'|capfirst }}</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -818,6 +818,7 @@
             }
         }
     </style>
+<script src="/static/js/csrf.js"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -882,10 +883,10 @@
         
             <div class="header-right-group" style="display: flex; align-items: center; gap: 20px;">
                 <div class="user-profile-header">
-                    <div class="user-profile-avatar-header">{{ (current_user.nama or 'U')[:2]|upper }}</div>
+                    <div class="user-profile-avatar-header">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
                     <div class="user-profile-info-header">
-                        <div class="user-profile-name-header">{{ current_user.nama or 'User' }}</div>
-                        <div class="user-profile-role-header">{{ current_user.role or 'User' }}</div>
+                        <div class="user-profile-name-header">{{ current_user.nama|default:'User' }}</div>
+                        <div class="user-profile-role-header">{{ current_user.role|default:'User' }}</div>
                     </div>
                     <button class="user-profile-logout-header" onclick="confirmLogout(event)" title="Logout">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -904,10 +905,10 @@
             <!-- Profile Header -->
             <div class="form-section">
                 <div class="profile-header">
-                    <div class="profile-avatar-large">{{ (current_user.nama or "U")[:2]|upper }}</div>
+                    <div class="profile-avatar-large">{{ current_user.nama|default:'U'|slice:':2'|upper }}</div>
                     <div class="profile-info">
                         <div class="profile-name">Jarwo</div>
-                        <div class="profile-role">{{ (current_user.role or "-")|capitalize }}</div>
+                        <div class="profile-role">{{ current_user.role|default:'-'|capfirst }}</div>
                         <div class="profile-badges">
                             <span class="profile-badge">Verified</span>
                             <span class="profile-badge">Full Access</span>
@@ -937,11 +938,11 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Nama Lengkap</div>
-                            <div class="detail-value">{{ current_user.nama or "-" }}</div>
+                            <div class="detail-value">{{ current_user.nama|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Role</div>
-                            <div class="detail-value">{{ (current_user.role or "-")|capitalize }}</div>
+                            <div class="detail-value">{{ current_user.role|default:'-'|capfirst }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Bergabung</div>
@@ -960,15 +961,15 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Email</div>
-                            <div class="detail-value">{{ current_user.email or "-" }}</div>
+                            <div class="detail-value">{{ current_user.email|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">No. Telepon</div>
-                            <div class="detail-value">{{ current_user.phone or "-" }}</div>
+                            <div class="detail-value">{{ current_user.phone|default:'-' }}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Alamat</div>
-                            <div class="detail-value">{{ current_user.jabatan or "-" }}</div>
+                            <div class="detail-value">{{ current_user.jabatan|default:'-' }}</div>
                         </div>
                     </div>
                 </div>
@@ -986,29 +987,29 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Nama Lengkap</label>
-                            <input type="text" id="fullName" value="{{ current_user.nama or "-" }}" placeholder="Nama lengkap">
+                            <input type="text" id="fullName" value="{{ current_user.nama|default:'-' }}" placeholder="Nama lengkap">
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" id="email" value="{{ current_user.email or "-" }}" placeholder="Email">
+                            <input type="email" id="email" value="{{ current_user.email|default:'-' }}" placeholder="Email">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>No. Telepon</label>
-                            <input type="text" id="phone" value="{{ current_user.phone or "-" }}" placeholder="No. telepon">
+                            <input type="text" id="phone" value="{{ current_user.phone|default:'-' }}" placeholder="No. telepon">
                         </div>
                         <div class="form-group">
                             <label>Role</label>
-                            <input type="text" value="{{ (current_user.role or "-")|capitalize }}" placeholder="Role" readonly>
+                            <input type="text" value="{{ current_user.role|default:'-'|capfirst }}" placeholder="Role" readonly>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label>Alamat</label>
-                            <textarea id="address" rows="2" placeholder="Alamat lengkap">{{ current_user.jabatan or "-" }}</textarea>
+                            <textarea id="address" rows="2" placeholder="Alamat lengkap">{{ current_user.jabatan|default:'-' }}</textarea>
                         </div>
                     </div>
 
@@ -1370,10 +1371,10 @@
         function confirmCancel() {
             closeCancelModal();
             // Reset form ke nilai awal
-            document.getElementById('fullName').value = '{{ current_user.nama or "-" }}';
-            document.getElementById('email').value = '{{ current_user.email or "-" }}';
-            document.getElementById('phone').value = '{{ current_user.phone or "-" }}';
-            document.getElementById('address').value = '{{ current_user.jabatan or "-" }}';
+            document.getElementById('fullName').value = '{{ current_user.nama|default:'-' }}';
+            document.getElementById('email').value = '{{ current_user.email|default:'-' }}';
+            document.getElementById('phone').value = '{{ current_user.phone|default:'-' }}';
+            document.getElementById('address').value = '{{ current_user.jabatan|default:'-' }}';
         }
 
         function changePassword() {
