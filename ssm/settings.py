@@ -5,7 +5,7 @@ SECRET_KEY=os.getenv('SECRET_KEY','dev-change-me')
 DEBUG=os.getenv('DEBUG','1')=='1'
 ALLOWED_HOSTS=os.getenv('ALLOWED_HOSTS','*').split(',')
 INSTALLED_APPS=['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles','portal']
-MIDDLEWARE=['django.middleware.security.SecurityMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','portal.middleware.JsonErrorMiddleware']
+MIDDLEWARE=['django.middleware.security.SecurityMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','django.contrib.messages.middleware.MessageMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','portal.middleware.JsonErrorMiddleware']
 ROOT_URLCONF='ssm.urls'; TEMPLATES=[{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[BASE_DIR/'templates'],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.request','portal.context.current_user']}}]
 WSGI_APPLICATION='ssm.wsgi.application'
 if os.getenv('DB_ENGINE','mysql')=='sqlite': DATABASES={'default':{'ENGINE':'django.db.backends.sqlite3','NAME':os.getenv('DB_NAME',BASE_DIR/'db.sqlite3')}}
