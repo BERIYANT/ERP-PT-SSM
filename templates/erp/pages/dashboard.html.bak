@@ -1,0 +1,20 @@
+{% extends 'erp/layouts/app.html' %}
+{% block page_content %}
+<div class="page-head"><div><div class="eyebrow">Mulai dari sini</div><h2>Beranda Workbook Proyek</h2><p>Pilih proyek, lalu buka lembar kerja seperti yang biasa digunakan di Excel.</p></div><a class="btn" href="{% url 'erp:project-list' %}">Lihat Semua Proyek</a></div>
+<div class="workflow-help"><strong>Cara menggunakan:</strong><span>1. Pilih proyek</span><span>2. Pilih worksheet</span><span>3. Isi atau periksa data</span><span>4. Ajukan approval</span></div>
+<div class="project-workbook-grid">
+{% for item in projects %}
+<article class="workbook-card">
+  <header><div><small>{{ item.project_code }}</small><h3>{{ item.name }}</h3><p>{{ item.client.name }}</p></div><span class="badge {{ item.status }}">{{ item.status }}</span></header>
+  <div class="workbook-actions">
+    <a href="{% url 'erp:project-dashboard' item.id %}"><b>01</b><span>Project Control<small>Ringkasan dan alur kerja</small></span></a>
+    <a href="{% url 'erp:project-dashboard' item.id %}?sheet=po-rab"><b>02</b><span>PO &amp; RAB<small>Nilai kontrak dan anggaran</small></span></a>
+    <a href="{% url 'erp:project-overhead' item.id %}"><b>03</b><span>Progress Mandor<small>Volume dan opname</small></span></a>
+    <a href="{% url 'erp:project-foreman-advances' item.id %}"><b>04</b><span>Pengajuan Dana<small>Kasbon dan pencairan</small></span></a>
+    <a href="{% url 'erp:project-dashboard' item.id %}?sheet=actual-cost"><b>05</b><span>Expense / Lap Keu<small>Realisasi penggunaan dana</small></span></a>
+    <a href="{% url 'erp:project-dashboard' item.id %}?sheet=invoice"><b>06</b><span>Invoice &amp; Cash In<small>Tagihan dan pembayaran</small></span></a>
+  </div>
+</article>
+{% empty %}<div class="sheet empty">Belum ada proyek yang dapat diakses.</div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+.workbook-tab{display:inline-flex;align-items:center;padding:12px 20px;border:0;border-right:1px solid #cfd8e3;background:transparent;color:#526174;font:700 12px Inter,Arial,sans-serif;text-decoration:none;cursor:pointer}.workbook-tab:hover{background:#f2f6fa;color:#1f66cc}.workbook-tab.active{background:#fff;color:#1f66cc;border-top:3px solid #1f66cc;padding-top:9px}.workbook-strip{overflow-x:auto}
+
+/* -- Kolom Aksi -- */
+.table-wrap th:last-child{text-align:right;white-space:nowrap;width:1%;padding-right:14px;color:#526174;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.table-wrap td:last-child{white-space:nowrap;text-align:right;padding:6px 14px;vertical-align:middle}
+
+.inline-actions{display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+.inline-actions form{display:inline-flex;margin:0}
+
+.inline-actions .btn,
+.inline-actions .btn.compact{height:28px;min-width:60px;padding:0 11px;border-radius:6px;font-size:12px;font-weight:600;box-shadow:none;line-height:28px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+
+.inline-actions .btn.secondary{border:1px solid #d0dae6;background:#fff;color:#2c4461}
+.inline-actions .btn.secondary:hover{border-color:#1f66cc;background:#f0f6ff;color:#1f66cc}
+
+.inline-actions form:last-child:not(:first-child) .btn.secondary{border-color:#f4c5cb;color:#b53b48;background:#fffafb}
+.inline-actions form:last-child:not(:first-child) .btn.secondary:hover{border-color:#d9404f;background:#fff0f2;color:#8f2430}
+
+.inline-actions .locked-label{font-size:11px;color:#a0afc0;font-style:italic;padding:0 4px}
+/* header kolom Aksi */
+th.col-aksi{text-align:right;width:1%;min-width:130px;padding-right:14px !important;white-space:nowrap}
+
+.page-head>.inline-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px}
+.page-head>.inline-actions .badge{min-height:30px;display:inline-flex;align-items:center}
+
+.form-actions{display:flex;align-items:center;gap:10px;padding:16px 18px}
+.form-actions .btn{min-width:118px}
+
+@media(max-width:800px){
+  .inline-actions{flex-wrap:wrap;justify-content:flex-start;gap:5px}
+  .table-wrap td:last-child,.table-wrap th:last-child{text-align:left;padding-right:10px}
+  .inline-actions .btn,.inline-actions .btn.compact{min-width:52px;font-size:11px}
+  .page-head>.inline-actions{justify-content:flex-start}
+}

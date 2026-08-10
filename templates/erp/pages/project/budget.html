@@ -1,0 +1,26 @@
+{% extends 'erp/layouts/project.html' %}
+{% block project_content %}
+<div class="page-toolbar">
+  <div class="toolbar-head">
+    <div>
+      <div class="eyebrow">Budget Worksheet</div>
+      <h2>{{ page_title }}</h2>
+      <p>Susunan RAB per item, segmen, volume, satuan, dan harga unit.</p>
+    </div>
+    <div class="toolbar-actions">
+      <span class="badge APPROVED">VERSION CONTROLLED</span>
+      <a class="btn" href="{% url 'erp:project-budget-create' project.id category %}">+ Baris RAB</a>
+    </div>
+  </div>
+</div>
+<nav class="workbook-strip toolbar-tabs" aria-label="Worksheet RAB">
+  <a class="workbook-tab {% if budget_tab == 'worksheet' %}active{% endif %}" href="?tab=worksheet">{{ page_title }}</a>
+  <a class="workbook-tab {% if budget_tab == 'segments' %}active{% endif %}" href="?tab=segments">Rekap Segment</a>
+  <a class="workbook-tab {% if budget_tab == 'variance' %}active{% endif %}" href="?tab=variance">Variance</a>
+</nav>
+<div class="panel sheet"><div class="table-wrap">
+{% if budget_tab == 'segments' %}<table><thead><tr><th>No</th><th>Kode Segment</th><th>Nama Segment</th><th class="numeric">Jumlah Item</th><th class="numeric">Total RAB</th></tr></thead><tbody>{% for item in segment_summary %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.segment__segment_code|default:'UMUM' }}</strong></td><td>{{ item.segment__segment_name|default:'Tanpa Segment' }}</td><td class="numeric">{{ item.item_count }}</td><td class="numeric">Rp {{ item.total|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada rekap segment.</td></tr>{% endfor %}</tbody></table>
+{% elif budget_tab == 'variance' %}<table><thead><tr><th>No</th><th>Kode Item</th><th>Uraian</th><th class="numeric">RAB</th><th class="numeric">Realisasi</th><th class="numeric">Variance</th></tr></thead><tbody>{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.description }}</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td><td class="numeric">Rp 0</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="6" class="empty">Belum ada data variance.</td></tr>{% endfor %}</tbody></table>
+{% else %}<table><thead><tr><th class="row-index">No</th><th>Kode Item</th><th>Segmen / Span</th><th>Uraian Pekerjaan</th><th>Sat.</th><th class="numeric">Volume</th><th class="numeric">Harga Satuan</th><th class="numeric">Jumlah RAB</th><th>Versi</th><th class="col-aksi">Aksi</th></tr></thead><tbody>{% for item in budget_lines %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td class="description">{{ item.description }}</td><td>{{ item.unit }}</td><td class="numeric">{{ item.planned_qty }}</td><td class="numeric">Rp {{ item.unit_cost|floatformat:0 }}</td><td class="numeric"><strong>Rp {{ item.planned_cost|floatformat:0 }}</strong></td><td>V{{ item.version }}</td><td class="col-aksi"><div class="inline-actions"><a class="btn secondary compact" href="{% url 'erp:project-budget-edit' project.id category item.id %}">Edit</a><form method="post" action="{% url 'erp:project-budget-delete' project.id category item.id %}" onsubmit="return confirm('Hapus baris RAB ini?')">{% csrf_token %}<button class="btn secondary compact">Hapus</button></form></div></td></tr>{% empty %}<tr><td colspan="10" class="empty">Belum ada baris {{ page_title|lower }} pada proyek ini.</td></tr>{% endfor %}</tbody></table>{% endif %}
+</div></div>
+{% endblock %}

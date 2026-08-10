@@ -107,53 +107,6 @@ class SupervisiLaporanFoto(Base):
  laporan=models.ForeignKey(SupervisiLaporan,on_delete=models.CASCADE,related_name='foto'); nama_file=models.CharField(max_length=255); caption=models.CharField(max_length=255,null=True)
  class Meta: db_table='supervisi_laporan_foto'
  def to_dict(self): d=D(self,'id nama_file caption created_at'); d['url']='/static/uploads/'+self.nama_file; return d
-class ProjectSegment(Base):
- project=models.ForeignKey(Project,on_delete=models.PROTECT,related_name='segments'); code=models.CharField(max_length=50); name=models.CharField(max_length=200); location=models.CharField(max_length=255,blank=True); is_active=models.BooleanField(default=True)
- class Meta: db_table='project_segments'; constraints=[models.UniqueConstraint(fields=['project','code'],name='uniq_project_segment_code')]
-class ProjectMember(Base):
- project=models.ForeignKey(Project,on_delete=models.PROTECT,related_name='members'); segment=models.ForeignKey(ProjectSegment,on_delete=models.PROTECT,null=True,blank=True); user=models.ForeignKey(User,on_delete=models.PROTECT,related_name='erp_assignments'); start_date=models.DateField(); end_date=models.DateField(null=True,blank=True); is_active=models.BooleanField(default=True)
- class Meta: db_table='project_members'
-class PurchaseOrder(Base):
- project=models.ForeignKey(Project,on_delete=models.PROTECT,related_name='purchase_orders'); number=models.CharField(max_length=80,unique=True); date=models.DateField(); tax_percent=models.DecimalField(max_digits=5,decimal_places=2,default=0); status=models.CharField(max_length=20,default='DRAFT'); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='customer_purchase_orders'
-class PurchaseOrderItem(Base):
- po=models.ForeignKey(PurchaseOrder,on_delete=models.CASCADE,related_name='items'); description=models.CharField(max_length=255); unit=models.CharField(max_length=30); quantity=models.DecimalField(max_digits=18,decimal_places=4); unit_price=models.DecimalField(max_digits=18,decimal_places=2)
- class Meta: db_table='purchase_order_items'
- @property
- def total(self): return self.quantity*self.unit_price
-class BudgetLine(Base):
- project=models.ForeignKey(Project,on_delete=models.PROTECT,related_name='budget_lines'); po_item=models.ForeignKey(PurchaseOrderItem,on_delete=models.PROTECT,null=True,blank=True); code=models.CharField(max_length=50); description=models.CharField(max_length=255); category=models.CharField(max_length=50); unit=models.CharField(max_length=30); quantity=models.DecimalField(max_digits=18,decimal_places=4); unit_price=models.DecimalField(max_digits=18,decimal_places=2); version=models.PositiveIntegerField(default=1); status=models.CharField(max_length=20,default='DRAFT')
- class Meta: db_table='project_budget_lines'; constraints=[models.UniqueConstraint(fields=['project','code','version'],name='uniq_budget_version')]
- @property
- def total(self): return self.quantity*self.unit_price
-class DailyReport(Base):
- number=models.CharField(max_length=80,unique=True); project=models.ForeignKey(Project,on_delete=models.PROTECT); segment=models.ForeignKey(ProjectSegment,on_delete=models.PROTECT); report_date=models.DateField(); activity=models.TextField(); quantity=models.DecimalField(max_digits=18,decimal_places=4,default=0); unit=models.CharField(max_length=30,blank=True); location=models.CharField(max_length=255,blank=True); attachment=models.FileField(upload_to='erp/daily/',blank=True); status=models.CharField(max_length=20,default='DRAFT'); notes=models.TextField(blank=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='daily_reports')
- class Meta: db_table='daily_reports'
-class FundRequest(Base):
- number=models.CharField(max_length=80,unique=True); project=models.ForeignKey(Project,on_delete=models.PROTECT); segment=models.ForeignKey(ProjectSegment,on_delete=models.PROTECT); budget_line=models.ForeignKey(BudgetLine,on_delete=models.PROTECT); amount=models.DecimalField(max_digits=18,decimal_places=2); purpose=models.TextField(); status=models.CharField(max_length=20,default='DRAFT'); notes=models.TextField(blank=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='fund_requests')
- class Meta: db_table='fund_requests'
-class Disbursement(Base):
- fund_request=models.ForeignKey(FundRequest,on_delete=models.PROTECT,related_name='disbursements'); date=models.DateField(); amount=models.DecimalField(max_digits=18,decimal_places=2); reference=models.CharField(max_length=100,unique=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='disbursements'
-class ExpenseReport(Base):
- number=models.CharField(max_length=80,unique=True); fund_request=models.ForeignKey(FundRequest,on_delete=models.PROTECT,related_name='expense_reports'); date=models.DateField(); amount=models.DecimalField(max_digits=18,decimal_places=2); description=models.TextField(); receipt=models.FileField(upload_to='erp/receipts/',blank=True); status=models.CharField(max_length=20,default='DRAFT'); notes=models.TextField(blank=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='expense_reports'
-class ProgressReport(Base):
- number=models.CharField(max_length=80,unique=True); project=models.ForeignKey(Project,on_delete=models.PROTECT); po_item=models.ForeignKey(PurchaseOrderItem,on_delete=models.PROTECT); period=models.DateField(); quantity=models.DecimalField(max_digits=18,decimal_places=4); status=models.CharField(max_length=20,default='DRAFT'); notes=models.TextField(blank=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='progress_reports'
-class ErpInvoice(Base):
- number=models.CharField(max_length=80,unique=True); project=models.ForeignKey(Project,on_delete=models.PROTECT); progress=models.ForeignKey(ProgressReport,on_delete=models.PROTECT); issue_date=models.DateField(); due_date=models.DateField(); subtotal=models.DecimalField(max_digits=18,decimal_places=2); tax=models.DecimalField(max_digits=18,decimal_places=2,default=0); status=models.CharField(max_length=20,default='DRAFT'); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='erp_invoices'
- @property
- def total(self): return self.subtotal+self.tax
- @property
- def paid(self): return self.payments.aggregate(x=models.Sum('amount'))['x'] or __import__('decimal').Decimal('0')
-class Payment(Base):
- invoice=models.ForeignKey(ErpInvoice,on_delete=models.PROTECT,related_name='payments'); date=models.DateField(); amount=models.DecimalField(max_digits=18,decimal_places=2); reference=models.CharField(max_length=100,unique=True); created_by=models.ForeignKey(User,on_delete=models.PROTECT,related_name='+')
- class Meta: db_table='payments'
-class Approval(Base):
- module=models.CharField(max_length=40); object_id=models.PositiveBigIntegerField(); decision=models.CharField(max_length=20); notes=models.TextField(blank=True); decided_by=models.ForeignKey(User,on_delete=models.PROTECT); decided_at=models.DateTimeField(default=timezone.now)
- class Meta: db_table='approvals'; indexes=[models.Index(fields=['module','object_id'])]
 def D(o,n):
  d={}
  for k in n.split():

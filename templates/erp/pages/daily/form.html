@@ -1,0 +1,187 @@
+{% extends 'erp/layouts/app.html' %}
+{% load erp_tags %}
+{% block page_content %}
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Field Input</div>
+    <h2>Form Laporan Harian</h2>
+    <p>Catat pekerjaan aktual dan material yang digunakan dalam satu dokumen.</p>
+  </div>
+  <button class="btn secondary" type="button" onclick="history.back()">&#8592; Kembali</button>
+</div>
+
+<nav class="workbook-strip form-tabs" aria-label="Tahapan laporan harian">
+  <button class="workbook-tab active" type="button" data-panel="daily-header">
+    1 &middot; Header Laporan
+  </button>
+  <button class="workbook-tab" type="button" data-panel="daily-work">
+    2 &middot; Pekerjaan Aktual
+  </button>
+  <button class="workbook-tab" type="button" data-panel="daily-materials">
+    3 &middot; Pemakaian Material
+  </button>
+</nav>
+
+<form method="post" class="sheet document-form" id="daily-form">
+  {% csrf_token %}
+
+  {# Panel 1: Header #}
+  <section class="form-tab-panel form-section" id="daily-header">
+    <div class="form-section-title">
+      <span>1</span> Header Laporan
+    </div>
+    {{ form.non_field_errors }}
+    <div class="form-grid">
+      {% for field in form %}
+      <div class="field {{ field|widget_span }}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+        {% if field.help_text %}
+        <small>{{ field.help_text }}</small>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# Panel 2: Pekerjaan Harian #}
+  <section class="form-tab-panel document-lines" id="daily-work" hidden>
+    <div class="panel-header">
+      <div>
+        <h3>2. Pekerjaan Harian</h3>
+        <small>Catat volume pekerjaan aktual per hari</small>
+      </div>
+      <button class="btn secondary compact" type="button" data-add-work>+ Tambah Baris</button>
+    </div>
+    {{ work_items.management_form }}
+    {{ work_items.non_form_errors }}
+    <div data-work-list>
+      {% for line in work_items %}
+      <div class="line-form">
+        <div class="line-number">{{ forloop.counter }}</div>
+        <div class="form-grid">
+          {% for field in line.visible_fields %}
+          <div class="field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+          {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <template data-work-empty>
+      <div class="line-form">
+        <div class="line-number"></div>
+        <div class="form-grid">
+          {% for field in work_items.empty_form.visible_fields %}
+          <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          {% for hidden in work_items.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+    </template>
+  </section>
+
+  {# Panel 3: Material #}
+  <section class="form-tab-panel document-lines" id="daily-materials" hidden>
+    <div class="panel-header">
+      <div>
+        <h3>3. Pemakaian Material</h3>
+        <small>Catat material dan harga yang dipakai hari ini</small>
+      </div>
+      <button class="btn secondary compact" type="button" data-add-material>+ Tambah Baris</button>
+    </div>
+    {{ materials.management_form }}
+    {{ materials.non_form_errors }}
+    <div data-material-list>
+      {% for line in materials %}
+      <div class="line-form">
+        <div class="line-number">{{ forloop.counter }}</div>
+        <div class="form-grid">
+          {% for field in line.visible_fields %}
+          <div class="field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+          {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <template data-material-empty>
+      <div class="line-form">
+        <div class="line-number"></div>
+        <div class="form-grid">
+          {% for field in materials.empty_form.visible_fields %}
+          <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          {% for hidden in materials.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+    </template>
+  </section>
+
+  <div class="form-actions">
+    <button class="btn secondary" type="button" onclick="history.back()">Batal</button>
+    <button class="btn" type="submit">Simpan Laporan</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  var tabs   = Array.from(document.querySelectorAll('.form-tabs [data-panel]'));
+  var panels = Array.from(document.querySelectorAll('.form-tab-panel'));
+
+  function openPanel(id) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.panel === id); });
+    panels.forEach(function (p) { p.hidden = p.id !== id; });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { openPanel(t.dataset.panel); });
+  });
+
+  function makeAdder(btnSel, listSel, tplSel, totalSel) {
+    var btn  = document.querySelector(btnSel);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var total = document.querySelector(totalSel);
+      var list  = document.querySelector(listSel);
+      var tpl   = document.querySelector(tplSel);
+      var index = parseInt(total.value, 10);
+      list.insertAdjacentHTML('beforeend', tpl.innerHTML.replaceAll('__prefix__', index));
+      total.value = index + 1;
+      list.lastElementChild.querySelector('.line-number').textContent = index + 1;
+    });
+  }
+
+  makeAdder('[data-add-work]',     '[data-work-list]',     '[data-work-empty]',     '[name$="-TOTAL_FORMS"]:first-of-type');
+  makeAdder('[data-add-material]', '[data-material-list]', '[data-material-empty]', '[name$="-TOTAL_FORMS"]:last-of-type');
+
+  // Auto-jump to first panel with errors
+  if (document.querySelector('.errorlist')) {
+    {% if form.errors %}
+    openPanel('daily-header');
+    {% elif work_items.errors %}
+    openPanel('daily-work');
+    {% elif materials.errors %}
+    openPanel('daily-materials');
+    {% endif %}
+  }
+}());
+</script>
+
+{% endblock %}

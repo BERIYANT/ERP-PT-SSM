@@ -1,0 +1,23 @@
+{% extends 'erp/layouts/app.html' %}
+{% block page_content %}
+<div class="page-toolbar">
+  <div class="toolbar-head">
+    <div>
+      <div class="eyebrow">Management Report</div>
+      <h2>Profitabilitas Proyek</h2>
+      <p>Perbandingan nilai kontrak, RAB, realisasi biaya, dan margin sementara.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn secondary" onclick="window.print()">Cetak Laporan</button>
+    </div>
+  </div>
+</div>
+<nav class="workbook-strip toolbar-tabs" aria-label="Rekap proyek">
+  <a class="workbook-tab {% if report_tab == 'profitability' %}active{% endif %}" href="?tab=profitability">Profitability</a>
+  <a class="workbook-tab {% if report_tab == 'budget' %}active{% endif %}" href="?tab=budget">Budget vs Actual</a>
+  <a class="workbook-tab {% if report_tab == 'progress' %}active{% endif %}" href="?tab=progress">PO vs Progress</a>
+  <a class="workbook-tab {% if report_tab == 'aging' %}active{% endif %}" href="?tab=aging">Invoice Aging</a>
+</nav>
+<div class="sheet"><div class="table-wrap">{% if report_tab == 'aging' %}<table><thead><tr><th class="row-index">No</th><th>Invoice</th><th>Project</th><th>Tanggal</th><th>Jatuh Tempo</th><th class="numeric">Nilai</th><th>Status</th></tr></thead><tbody>{% for row in aging_rows %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ row.invoice_number }}</strong></td><td>{{ row.project.project_code }}<br><small>{{ row.project.name }}</small></td><td>{{ row.invoice_date }}</td><td>{{ row.due_date|default:'-' }}</td><td class="numeric">Rp {{ row.total|floatformat:0 }}</td><td><span class="badge {{ row.status }}">{{ row.status }}</span></td></tr>{% empty %}<tr><td colspan="7" class="empty">Belum ada data invoice.</td></tr>{% endfor %}</tbody></table>{% else %}<table><thead><tr><th class="row-index">No</th><th>Kode Project</th><th>Nama Project</th><th class="numeric">Nilai PO</th><th class="numeric">RAB / Budget</th><th class="numeric">Actual Cost</th><th class="numeric">{% if report_tab == 'budget' %}Variance{% elif report_tab == 'progress' %}Sisa Nilai PO{% else %}Margin Sementara{% endif %}</th><th>Indikator</th></tr></thead><tbody>{% for row in report_rows %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ row.project.project_code }}</strong></td><td class="description">{{ row.project.name }}</td><td class="numeric">Rp {{ row.po|floatformat:0 }}</td><td class="numeric">Rp {{ row.budget|floatformat:0 }}</td><td class="numeric">Rp {{ row.actual|floatformat:0 }}</td><td class="numeric"><strong>Rp {{ row.margin|floatformat:0 }}</strong></td><td>{% if row.margin >= 0 %}<span class="badge APPROVED">POSITIF</span>{% else %}<span class="badge REJECTED">NEGATIF</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="8" class="empty">Belum ada data laporan.</td></tr>{% endfor %}</tbody></table>{% endif %}</div></div>
+<div class="panel panel--tight"><div class="panel-header"><h3>Catatan Rekonsiliasi</h3></div><div class="panel-body"><p class="breadcrumb panel__note">Nilai laporan dihitung dari transaksi sumber di database. Workbook Excel tetap dipertahankan sebagai provenance import, bukan sebagai sumber kebenaran setelah data disetujui.</p></div></div>
+{% endblock %}

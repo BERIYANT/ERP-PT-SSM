@@ -3,3 +3,5 @@ PyMySQL>=1.1
 Werkzeug>=3.0
 python-dotenv>=1.0
 cryptography>=42
+openpyxl>=3.1
+xlrd>=2.0

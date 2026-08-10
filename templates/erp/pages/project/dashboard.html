@@ -1,0 +1,37 @@
+{% extends 'erp/layouts/project.html' %}
+{% block project_content %}
+<div class="cards">
+  <div class="card"><span class="label">PO</span><strong>Rp {{ po_total|floatformat:0 }}</strong><small>nilai kontrak customer</small></div>
+  <div class="card"><span class="label">RAB</span><strong>Rp {{ budget_total|floatformat:0 }}</strong><small>jasa + material + overhead</small></div>
+  <div class="card"><span class="label">Pengajuan Dana</span><strong>Rp {{ fund_total|floatformat:0 }}</strong><small>seluruh status dokumen</small></div>
+  <div class="card"><span class="label">Opname</span><strong>{{ progress_count }}</strong><small>dokumen progress approved</small></div>
+</div>
+<nav class="workbook-strip toolbar-tabs" aria-label="Worksheet proyek">
+  <a class="workbook-tab {% if active_sheet == 'control' %}active{% endif %}" href="?sheet=control">Project Control</a>
+  <a class="workbook-tab {% if active_sheet == 'po-rab' %}active{% endif %}" href="?sheet=po-rab">PO &amp; RAB</a>
+  <a class="workbook-tab {% if active_sheet == 'actual-cost' %}active{% endif %}" href="?sheet=actual-cost">Actual Cost</a>
+  <a class="workbook-tab {% if active_sheet == 'invoice' %}active{% endif %}" href="?sheet=invoice">Invoice</a>
+</nav>
+<div class="sheet">
+{% if active_sheet == 'control' %}
+  <div class="panel-header"><h3>Alur Proyek</h3></div>
+  <div class="panel sheet"><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Worksheet</th><th>Sumber Data</th><th>Status</th><th class="col-aksi">Aksi</th></tr></thead><tbody>
+    <tr><td>01</td><td><strong>Kontrak &amp; Anggaran</strong></td><td>Purchase Order / SPH / RAB</td><td><span class="badge APPROVED">TERHUBUNG</span></td><td><a class="btn secondary compact" href="?sheet=po-rab">Buka</a></td></tr>
+    <tr><td>02</td><td><strong>Operasional Lapangan</strong></td><td>Daily Report / Progress Mandor</td><td><span class="badge APPROVED">TERHUBUNG</span></td><td><a class="btn secondary compact" href="{% url 'erp:daily-list' %}?project={{ project.id }}">Buka</a></td></tr>
+    <tr><td>03</td><td><strong>Realisasi Biaya</strong></td><td>Fund Request / Expense Report</td><td><span class="badge APPROVED">TERHUBUNG</span></td><td><a class="btn secondary compact" href="?sheet=actual-cost">Buka</a></td></tr>
+    <tr><td>04</td><td><strong>Penagihan</strong></td><td>Invoice / Payment</td><td><span class="badge APPROVED">TERHUBUNG</span></td><td><a class="btn secondary compact" href="?sheet=invoice">Buka</a></td></tr>
+  </tbody></table></div></div>
+{% elif active_sheet == 'po-rab' %}
+  <div class="panel-header"><h3>Purchase Order</h3><a class="btn secondary compact" href="{% url 'erp:project-services' project.id %}">Buka RAB Jasa</a></div>
+  <div class="panel sheet"><div class="table-wrap"><table><thead><tr><th>No</th><th>Nomor PO</th><th>Tanggal</th><th class="numeric">Nilai Kontrak</th><th>Status</th></tr></thead><tbody>{% for item in purchase_orders %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.po_number }}</strong></td><td>{{ item.po_date }}</td><td class="numeric">Rp {{ item.contract_value|floatformat:0 }}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada PO.</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="panel-header"><h3>Rencana Anggaran Biaya</h3></div>
+  <div class="panel sheet"><div class="table-wrap"><table><thead><tr><th>Kode</th><th>Kategori</th><th>Uraian</th><th>Segmen</th><th class="numeric">Rencana</th></tr></thead><tbody>{% for item in budget_lines %}<tr><td>{{ item.line_code }}</td><td>{{ item.cost_category }}</td><td class="description">{{ item.description }}</td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada RAB.</td></tr>{% endfor %}</tbody></table></div></div>
+{% elif active_sheet == 'actual-cost' %}
+  <div class="panel-header"><h3>Actual Cost / Expense Report</h3><a class="btn secondary compact" href="{% url 'erp:expense-list' %}?project={{ project.id }}">Buka Register</a></div>
+  <div class="panel sheet"><div class="table-wrap"><table><thead><tr><th>No</th><th>Nomor Laporan</th><th>Tanggal</th><th class="numeric">Nilai Aktual</th><th>Status</th></tr></thead><tbody>{% for item in expenses %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.report_number }}</strong></td><td>{{ item.report_date }}</td><td class="numeric">Rp {{ item.total_actual|floatformat:0 }}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada actual cost yang diposting.</td></tr>{% endfor %}</tbody></table></div></div>
+{% else %}
+  <div class="panel-header"><h3>Invoice &amp; Pembayaran</h3><a class="btn secondary compact" href="{% url 'erp:invoice-list' %}?project={{ project.id }}">Buka Register</a></div>
+  <div class="panel sheet"><div class="table-wrap"><table><thead><tr><th>No</th><th>Nomor Invoice</th><th>Tanggal</th><th class="numeric">Total</th><th class="numeric">Pembayaran</th><th>Status</th></tr></thead><tbody>{% for item in invoices %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.invoice_number }}</strong></td><td>{{ item.invoice_date }}</td><td class="numeric">Rp {{ item.total|floatformat:0 }}</td><td class="numeric">{% for payment in item.payments.all %}Rp {{ payment.amount|floatformat:0 }}{% if not forloop.last %}<br>{% endif %}{% empty %}-{% endfor %}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="6" class="empty">Belum ada invoice.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endif %}
+</div>
+{% endblock %}

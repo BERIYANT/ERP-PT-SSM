@@ -28,13 +28,10 @@ def parse(v):
  except:return None
 @ensure_csrf_cookie
 def page(r,name,**ctx):
- if name!='login.html' and not r.user.is_authenticated:return redirect('/login')
+ if not name.endswith('/login.html') and name!='login.html' and not r.user.is_authenticated:return redirect('/login')
  return render(r,name,ctx)
 def index(r): return redirect('/dashboard' if r.user.is_authenticated else '/login')
-def dashboard(r,project_id=None):
- if r.user.is_authenticated and r.user.role=='mandor':return redirect('/mandor/request-kasbon')
- if r.user.is_authenticated and r.user.role=='supervisi':return redirect('/supervisi/laporan-kegiatan')
- return page(r,'dashboard project.html',dashboard_project_id=project_id)
+
 def auth_api(r,action):
  if action=='login':
   d=data(r); u=User.objects.filter(username=(d.get('username') or '').strip(),is_active=True).first()

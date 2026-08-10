@@ -1,0 +1,17 @@
+{% extends 'erp/layouts/app.html' %}
+{% block page_content %}
+<div class="page-toolbar">
+  <div class="toolbar-head">
+    <div>
+      <div class="eyebrow">Audit Trail</div>
+      <h2>Audit Aktivitas</h2>
+      <p>Riwayat keputusan dokumen dan batch import sumber Excel.</p>
+    </div>
+  </div>
+</div>
+<div class="split-grid">
+  <div class="panel"><div class="panel-header"><h3>Approval &amp; Keputusan</h3></div><div class="table-wrap"><table><thead><tr><th>Waktu</th><th>Dokumen</th><th>Keputusan</th><th>Oleh</th></tr></thead><tbody>{% for item in approvals %}<tr><td>{{ item.decided_at }}</td><td>{{ item.document_type }} #{{ item.document_id }}</td><td><span class="badge {{ item.decision }}">{{ item.decision }}</span></td><td>{{ item.approver.nama }}</td></tr>{% empty %}<tr><td colspan="4" class="empty">Belum ada approval.</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="panel"><div class="panel-header"><h3>Import Excel</h3></div><div class="table-wrap"><table><thead><tr><th>File</th><th>Sumber</th><th>Status</th></tr></thead><tbody>{% for item in imports %}<tr><td class="description">{{ item.file_name }}</td><td>{{ item.source_type }}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="3" class="empty">Belum ada batch import.</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="panel panel--tight"><div class="panel-header"><h3>Indikator Cepat</h3></div><div class="panel-body"><p class="breadcrumb">Audit ini menggabungkan keputusan approval dan batch import Excel untuk memudahkan pelacakan.</p></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends 'erp/layouts/app.html' %}
+{% load erp_tags %}
+{% block page_content %}
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Input Transaksi</div>
+    <h2>{{ page_title }}</h2>
+    <p>Header dan rincian disimpan dalam satu transaksi untuk mencegah data setengah tersimpan.</p>
+  </div>
+  <button class="btn secondary" type="button" onclick="history.back()">&#8592; Kembali</button>
+</div>
+
+<nav class="workbook-strip form-tabs" aria-label="Tahapan formulir">
+  <button class="workbook-tab active" type="button" data-panel="document-header">
+    1 &middot; Input Dokumen
+  </button>
+  {% if formset %}
+  <button class="workbook-tab" type="button" data-panel="document-lines">
+    2 &middot; Rincian Item
+  </button>
+  {% endif %}
+  <button class="workbook-tab" type="button" data-panel="document-validation">
+    3 &middot; Validasi
+  </button>
+</nav>
+
+<form method="post" enctype="multipart/form-data" class="sheet document-form" id="document-form">
+  {% csrf_token %}
+
+  {# Meta bar #}
+  <div class="document-meta">
+    <div class="meta-item">
+      <span>Status</span>
+      <strong>DRAFT / AUTO</strong>
+    </div>
+    <div class="meta-item">
+      <span>Input Oleh</span>
+      <strong>{{ request.user.nama|default:request.user.username }}</strong>
+    </div>
+    <div class="meta-item">
+      <span>Sistem Angka</span>
+      <strong>Decimal &amp; Server Calculation</strong>
+    </div>
+  </div>
+
+  {# Panel 1: Header #}
+  <section class="form-tab-panel form-section" id="document-header">
+    <div class="form-section-title">
+      <span>1</span> Header Dokumen
+    </div>
+    {{ form.non_field_errors }}
+    <div class="form-grid">
+      {% for field in form %}
+      <div class="field {{ field|widget_span }}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+        {% if field.help_text %}
+        <small>{{ field.help_text }}</small>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# Panel 2: Rincian item (optional) #}
+  {% if formset %}
+  <section class="form-tab-panel document-lines" id="document-lines" hidden>
+    <div class="panel-header">
+      <div>
+        <h3>2. Rincian Baris</h3>
+        <small>Tambahkan baris sesuai urutan kolom workbook</small>
+      </div>
+      <button class="btn secondary compact" type="button" data-add-form>+ Tambah Baris</button>
+    </div>
+    {{ formset.management_form }}
+    {{ formset.non_form_errors }}
+    <div data-form-list>
+      {% for line in formset %}
+      <div class="line-form">
+        <div class="line-number">{{ forloop.counter }}</div>
+        <div class="form-grid">
+          {% for field in line.visible_fields %}
+          <div class="field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+          {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <template data-empty-form>
+      <div class="line-form">
+        <div class="line-number"></div>
+        <div class="form-grid">
+          {% for field in formset.empty_form.visible_fields %}
+          <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+        </div>
+      </div>
+    </template>
+  </section>
+  {% endif %}
+
+  {# Panel 3: Validasi #}
+  <section class="form-tab-panel form-section" id="document-validation" hidden>
+    <div class="form-section-title">
+      <span>3</span> Validasi &amp; Simpan
+    </div>
+    <div class="panel-body">
+      <p>Periksa kembali header dan rincian sebelum menyimpan.</p>
+      {% if form.errors or formset.errors %}
+      <div class="status-banner is-error">
+        Masih ada field yang belum valid. Buka tab yang bertanda kesalahan dan perbaiki input.
+      </div>
+      {% else %}
+      <span class="badge APPROVED">&#10003; SIAP DIVALIDASI SERVER</span>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <button class="btn secondary" type="button" onclick="history.back()">Batal</button>
+    <button class="btn" type="submit">Simpan Dokumen</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  var tabs   = Array.from(document.querySelectorAll('.form-tabs [data-panel]'));
+  var panels = Array.from(document.querySelectorAll('.form-tab-panel'));
+
+  function openPanel(id) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.panel === id); });
+    panels.forEach(function (p) { p.hidden = p.id !== id; });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { openPanel(t.dataset.panel); });
+  });
+
+  var addBtn = document.querySelector('[data-add-form]');
+  if (addBtn) {
+    addBtn.addEventListener('click', function () {
+      var total = document.querySelector('[name$="-TOTAL_FORMS"]');
+      var list  = document.querySelector('[data-form-list]');
+      var tpl   = document.querySelector('[data-empty-form]');
+      var index = parseInt(total.value, 10);
+      var html  = tpl.innerHTML.replaceAll('__prefix__', index);
+      list.insertAdjacentHTML('beforeend', html);
+      total.value = index + 1;
+      list.lastElementChild.querySelector('.line-number').textContent = index + 1;
+    });
+  }
+
+  // Auto-jump to first panel with errors
+  var hasErrors = document.querySelector('.errorlist');
+  if (hasErrors) {
+    {% if form.errors %}
+    openPanel('document-header');
+    {% elif formset.errors %}
+    openPanel('document-lines');
+    {% else %}
+    openPanel('document-validation');
+    {% endif %}
+  }
+}());
+</script>
+
+{% endblock %}
