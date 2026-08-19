@@ -67,7 +67,7 @@ from .models import (
     Role,
     UserOrganization,
 )
-from .selectors import may_approve, may_manage_master, project_for_user, projects_for_user, user_role
+from .selectors import company_for_user, may_approve, may_manage_master, organization_for_user, project_for_user, projects_for_user, user_role
 from .services import (
     disburse_fund_request,
     next_document_number,
@@ -489,7 +489,8 @@ def expense_form(request, pk=None):
 def office_overhead_list(request):
     if not may_manage_master(request.user):
         raise PermissionDenied
-    rows = OfficeOverhead.objects.filter(company=request.user.organization.company).select_related("created_by", "approved_by")
+    company = company_for_user(request.user)
+    rows = OfficeOverhead.objects.filter(company=company).select_related("created_by", "approved_by")
     category = request.GET.get("category")
     if category:
         rows = rows.filter(category=category)

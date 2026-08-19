@@ -13,12 +13,12 @@ GLOBAL_NAVIGATION = [
 ]
 
 
+from .selectors import user_role
+
+
 def navigation(request):
     menu = list(GLOBAL_NAVIGATION)
-    try:
-        role = request.user.organization.role.code.lower()
-    except AttributeError:
-        role = ""
+    role = user_role(request.user)
     if role in {"admin", "superadmin"}:
         menu.append(("office_overheads", "Overhead Kantor", "erp:office-overheads"))
     return {"global_navigation": menu}
