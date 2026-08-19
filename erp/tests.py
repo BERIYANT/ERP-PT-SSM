@@ -23,6 +23,7 @@ from .models import (
 )
 from .selectors import projects_for_user
 from .services import disburse_fund_request, record_invoice_payment
+from .management.commands.post_erp_excel import normalize_installments
 
 
 class ErpWorkflowTests(TestCase):
@@ -63,3 +64,10 @@ class ErpWorkflowTests(TestCase):
         line = ProjectBudgetLine(project=other, segment=self.segment, line_code="X", description="X", cost_category="SERVICE", unit="m", planned_qty=1, unit_cost=1)
         with self.assertRaises(ValidationError):
             line.full_clean()
+
+    def test_excel_installments_reconcile_to_po_value(self):
+        rows = normalize_installments(
+            Decimal("100.00"),
+            [("INV-1", Decimal("60"), date.today(), "1"), ("INV-2", Decimal("50"), date.today(), "2")],
+        )
+        self.assertEqual(sum((row[1] for row in rows), Decimal("0")), Decimal("100.00"))

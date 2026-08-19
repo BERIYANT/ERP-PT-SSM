@@ -45,6 +45,24 @@ def quantity(value):
         return Decimal("0")
 
 
+def normalize_installments(contract_value, installments):
+    """Distribute the PO value over its recorded payment installments."""
+    valid = [item for item in installments if item[0] and item[1] > 0 and item[2]]
+    source_total = sum((item[1] for item in valid), Decimal("0"))
+    if contract_value <= 0 or source_total <= 0:
+        return []
+    normalized = []
+    allocated = Decimal("0")
+    for index, (number, amount, paid_date, sequence) in enumerate(valid):
+        if index == len(valid) - 1:
+            normalized_amount = contract_value - allocated
+        else:
+            normalized_amount = (contract_value * amount / source_total).quantize(Decimal("0.01"))
+            allocated += normalized_amount
+        normalized.append((number, normalized_amount, paid_date, sequence))
+    return normalized
+
+
 def excel_date(value):
     if isinstance(value, datetime):
         return value.date()
@@ -139,13 +157,15 @@ class Command(BaseCommand):
             )
             summary["po_items"] += int(made)
             po_map[po_number] = (project, segment, po)
-            payment_columns = ((row[5], row[6], row[7], "1"), (row[8], row[9], row[10], "2"))
-            for invoice_number, paid, paid_date, sequence in payment_columns:
+            payment_columns = []
+            for invoice_number, paid, paid_date, sequence in ((row[5], row[6], row[7], "1"), (row[8], row[9], row[10], "2")):
                 invoice_number = str(invoice_number or "").strip()
                 paid_amount = money(paid)
                 payment_date = excel_date(paid_date)
                 if not invoice_number or paid_amount <= 0 or not payment_date or "****" in str(paid):
                     continue
+                payment_columns.append((invoice_number, paid_amount, payment_date, sequence))
+            for invoice_number, paid_amount, payment_date, sequence in normalize_installments(amount, payment_columns):
                 invoice = Invoice.objects.filter(project=project, invoice_number=invoice_number).order_by("-revision").first()
                 if not invoice:
                     invoice = Invoice.objects.create(project=project, purchase_order=po, invoice_number=invoice_number, invoice_date=payment_date, subtotal=paid_amount, tax=0, status=DocumentStatus.PAID, created_by=user)

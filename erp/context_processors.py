@@ -14,4 +14,11 @@ GLOBAL_NAVIGATION = [
 
 
 def navigation(request):
-    return {"global_navigation": GLOBAL_NAVIGATION}
+    menu = list(GLOBAL_NAVIGATION)
+    try:
+        role = request.user.organization.role.code.lower()
+    except AttributeError:
+        role = ""
+    if role in {"admin", "superadmin"}:
+        menu.append(("office_overheads", "Overhead Kantor", "erp:office-overheads"))
+    return {"global_navigation": menu}

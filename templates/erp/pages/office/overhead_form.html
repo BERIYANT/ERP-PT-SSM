@@ -1,0 +1,65 @@
+{% extends 'erp/layouts/app.html' %}
+{% load erp_tags %}
+{% block page_content %}
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Finance & Admin</div>
+    <h2>{{ page_title }}</h2>
+    <p>Input biaya operasional kantor dan lampiran bukti pengeluaran.</p>
+  </div>
+  <button class="btn secondary" type="button" onclick="history.back()">&#8592; Kembali</button>
+</div>
+
+<nav class="workbook-strip form-tabs" aria-label="Tahapan formulir">
+  <button class="workbook-tab active" type="button" data-panel="document-header">1 &middot; Input Overhead</button>
+  <button class="workbook-tab" type="button" data-panel="document-validation">2 &middot; Validasi</button>
+</nav>
+
+<form method="post" enctype="multipart/form-data" class="sheet document-form" id="document-form">
+  {% csrf_token %}
+  <section class="form-tab-panel form-section" id="document-header">
+    <div class="form-section-title"><span>1</span> Header Overhead</div>
+    {{ form.non_field_errors }}
+    <div class="form-grid">
+      {% for field in form %}
+      <div class="field {{ field|widget_span }}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+        {% if field.help_text %}
+        <small>{{ field.help_text }}</small>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="form-tab-panel form-section" id="document-validation" hidden>
+    <div class="form-section-title"><span>2</span> Validasi & Simpan</div>
+    <div class="panel-body">
+      <p>Periksa kembali data overhead sebelum menyimpan.</p>
+      {% if form.errors %}
+      <div class="status-banner is-error">Masih ada field yang belum valid. Perbaiki input di header.</div>
+      {% else %}
+      <span class="badge APPROVED">&#10003; SIAP DIVALIDASI SERVER</span>
+      {% endif %}
+    </div>
+  </section>
+  <div class="form-actions">
+    <button class="btn secondary" type="button" onclick="history.back()">Batal</button>
+    <button class="btn" type="submit">Simpan Overhead</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  var tabs = Array.from(document.querySelectorAll('.form-tabs [data-panel]'));
+  var panels = Array.from(document.querySelectorAll('.form-tab-panel'));
+  function openPanel(id) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.panel === id); });
+    panels.forEach(function (p) { p.hidden = p.id !== id; });
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { openPanel(t.dataset.panel); }); });
+  if (document.querySelector('.errorlist')) { openPanel('document-header'); }
+})();
+</script>
+{% endblock %}

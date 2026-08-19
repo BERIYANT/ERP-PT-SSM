@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 
@@ -12,8 +13,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+
+@require_POST
+def logout_view(request):
+    auth_logout(request)
+    return redirect("/login")
+
 from .forms import (
     AttendanceForm,
+    ClientForm,
     DailyReportForm,
     DailyReportItemFormSet,
     ExpenseItemFormSet,
@@ -23,6 +31,7 @@ from .forms import (
     InvoiceForm,
     InvoiceItemFormSet,
     MaterialUsageFormSet,
+    OfficeOverheadForm,
     ProgressItemFormSet,
     ProgressReportForm,
     ProjectForm,
@@ -35,6 +44,7 @@ from .forms import (
 from .models import (
     Approval,
     Attendance,
+    BusinessPartner,
     CashTransaction,
     CustomerPurchaseOrder,
     DailyReport,
@@ -47,6 +57,7 @@ from .models import (
     Invoice,
     MaterialUsage,
     Employee,
+    OfficeOverhead,
     Project,
     ProjectBudgetLine,
     ProjectMember,
@@ -132,6 +143,21 @@ def project_form(request, project_id=None):
 
 
 @login_required
+@transaction.atomic
+def client_form(request):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    form = ClientForm(request.POST or None)
+    if form.is_valid():
+        client = form.save(commit=False)
+        client.partner_type = BusinessPartner.PartnerType.CLIENT
+        client.save()
+        messages.success(request, "Client berhasil ditambahkan.")
+        return redirect("erp:project-create")
+    return render(request, "erp/pages/form.html", _base_context("projects", "Tambah Client", form=form, formset=None))
+
+
+@login_required
 def project_dashboard(request, project_id):
     project = project_for_user(request.user, project_id)
     sheet = request.GET.get("sheet", "control")
@@ -167,7 +193,9 @@ def project_budget(request, project_id, category):
         raise Http404
     lines = project.budget_lines.filter(cost_category=category_map[category]).select_related("segment", "po_item")
     title_map = {"services": "Jasa", "materials": "Material", "overhead": "Overhead Progress", "petty-cash": "Petty Cash"}
-    segment_summary = lines.values("segment__segment_code", "segment__segment_name").annotate(total=Sum("planned_cost"), item_count=Count("id")).order_by("segment__segment_code") if tab == "segments" else ()
+    segment_summary = lines.values("segment__segment_name").annotate(
+        total=Sum("planned_cost"), item_count=Count("id"), volume=Sum("planned_qty"), unit_cost=Sum("unit_cost")
+    ).order_by("segment__segment_name") if tab == "segments" else ()
     return render(request, "erp/pages/project/budget.html", _project_context(project, category, title_map[category], budget_lines=lines, category=category, budget_tab=tab, segment_summary=segment_summary))
 
 
@@ -181,12 +209,21 @@ def project_budget_form(request, project_id, category, pk=None):
     if not may_manage_master(request.user):
         raise PermissionDenied
     instance = get_object_or_404(ProjectBudgetLine, pk=pk, project=project, cost_category=category_map[category]) if pk else None
-    form = ProjectBudgetLineForm(request.POST or None, instance=instance)
-    form.fields["segment"].queryset = project.segments.all()
-    form.fields["po_item"].queryset = PurchaseOrderItem.objects.filter(purchase_order__project=project)
+    form = ProjectBudgetLineForm(request.POST or None, instance=instance, category=category)
     if form.is_valid():
         line = form.save(commit=False)
         line.project = project
+        segment_name = form.cleaned_data["segment_name"].strip()
+        segment, _ = ProjectSegment.objects.get_or_create(
+            project=project,
+            segment_code=segment_name.upper().replace(" ", "-")[:80],
+            defaults={"segment_name": segment_name, "location": segment_name},
+        )
+        line.segment = segment
+        if category == "petty-cash":
+            line.line_code = f"PC-{ProjectBudgetLine.objects.filter(project=project, cost_category='PETTY_CASH').count() + 1:04d}"
+            line.unit = "Transaksi"
+            line.planned_qty = 1
         line.cost_category = category_map[category]
         line.full_clean()
         line.save()
@@ -436,7 +473,7 @@ def fund_form(request, pk=None):
 
 @login_required
 def expense_form(request, pk=None):
-    instance = get_object_or_404(ExpenseReport, pk=pk, project__in=projects_for_user(request.user)) if pk else ExpenseReport()
+    instance = get_object_or_404(ExpenseReport, pk=pk, project__in=projects_for_user(request.user))
     def prepare(obj):
         obj.submitted_by = request.user
         obj.report_number = obj.report_number or next_document_number("ER", ExpenseReport, obj.project, obj.report_date, "report_number")
@@ -446,6 +483,66 @@ def expense_form(request, pk=None):
         messages.success(request, "Expense Report berhasil disimpan.")
         return redirect("erp:expense-list")
     return result
+
+
+@login_required
+def office_overhead_list(request):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    rows = OfficeOverhead.objects.filter(company=request.user.organization.company).select_related("created_by", "approved_by")
+    category = request.GET.get("category")
+    if category:
+        rows = rows.filter(category=category)
+    return render(request, "erp/pages/office/overhead_list.html", _base_context("office_overheads", "Overhead Kantor", rows=rows[:300], categories=OfficeOverhead.Category.choices, selected_category=category))
+
+
+@login_required
+@transaction.atomic
+def office_overhead_form(request, pk=None):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    company = request.user.organization.company
+    instance = get_object_or_404(OfficeOverhead, pk=pk, company=company) if pk else None
+    if request.method == "POST":
+        form = OfficeOverheadForm(request.POST, request.FILES, instance=instance)
+        if form.is_valid():
+            overhead = form.save(commit=False)
+            overhead.company = company
+            overhead.created_by = request.user
+            overhead.full_clean()
+            overhead.save()
+            messages.success(request, "Data overhead berhasil disimpan.")
+            return redirect("erp:office-overheads")
+    else:
+        form = OfficeOverheadForm(instance=instance)
+    return render(request, "erp/pages/office/overhead_form.html", _base_context("office_overheads", "Form Overhead Kantor", form=form))
+
+
+@login_required
+@require_POST
+def office_overhead_delete(request, pk):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    overhead = get_object_or_404(OfficeOverhead, pk=pk, company=request.user.organization.company)
+    try:
+        overhead.delete()
+        messages.success(request, "Data overhead berhasil dihapus.")
+    except ProtectedError:
+        messages.error(request, "Data overhead sudah dipakai dan tidak dapat dihapus.")
+    return redirect("erp:office-overheads")
+
+
+@login_required
+@require_POST
+def office_overhead_approve(request, pk):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    overhead = get_object_or_404(OfficeOverhead, pk=pk, company=request.user.organization.company)
+    overhead.approved_by = request.user
+    overhead.approved_at = timezone.now()
+    overhead.save(update_fields=["approved_by", "approved_at", "updated_at"])
+    messages.success(request, "Overhead kantor berhasil disetujui.")
+    return redirect("erp:office-overheads")
 
 
 @login_required
@@ -611,7 +708,7 @@ def project_deactivate(request, project_id):
     project.is_active = False
     project.status = "INACTIVE"
     project.save(update_fields=["is_active", "status", "updated_at"])
-    messages.success(request, "Proyek berhasil dinonaktifkan.")
+    messages.success(request, "Proyek berhasil ditandai selesai.")
     return redirect("erp:project-list")
 
 

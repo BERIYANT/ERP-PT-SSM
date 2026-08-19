@@ -3,6 +3,7 @@ from django.forms import inlineformset_factory
 
 from .models import (
     Attendance,
+    BusinessPartner,
     CustomerPurchaseOrder,
     DailyReport,
     DailyReportItem,
@@ -13,6 +14,7 @@ from .models import (
     Invoice,
     InvoiceItem,
     MaterialUsage,
+    OfficeOverhead,
     ProgressItem,
     ProgressReport,
     Project,
@@ -36,6 +38,16 @@ class StyledModelForm(forms.ModelForm):
             field.widget.attrs["data-span"] = span
 
 
+class OfficeOverheadForm(StyledModelForm):
+    class Meta:
+        model = OfficeOverhead
+        fields = ["expense_date", "category", "description", "amount", "reference_number", "notes"]
+        widgets = {"expense_date": forms.DateInput(attrs={"type": "date"}), "amount": forms.NumberInput(attrs={"min": "0", "step": "1"}), "notes": forms.Textarea(attrs={"rows": 3})}
+        labels = {"expense_date": "Tanggal", "category": "Kategori", "description": "Keterangan", "amount": "Nominal", "reference_number": "Nomor Referensi / Bukti", "notes": "Catatan"}
+
+    _field_spans = {"expense_date": "span-1", "category": "span-1", "description": "span-2", "amount": "span-1", "reference_number": "span-1", "notes": "span-3"}
+
+
 class ProjectForm(StyledModelForm):
     class Meta:
         model = Project
@@ -54,6 +66,34 @@ class ProjectForm(StyledModelForm):
         "end_date":     "span-1",
         "status":       "span-1",
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["project_code"].label = "Segmen"
+        self.fields["name"].label = "Nama Proyek"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        company = cleaned_data.get("company")
+        project_code = cleaned_data.get("project_code")
+        if company and project_code:
+            existing = Project.objects.filter(
+                company=company,
+                project_code__iexact=project_code.strip(),
+            ).exclude(pk=self.instance.pk).first()
+            if existing:
+                self.add_error(
+                    "project_code",
+                    f"Data sudah ada. Segmen '{project_code}' sudah digunakan oleh proyek '{existing.name}'. Gunakan segmen lain atau edit proyek tersebut.",
+                )
+        return cleaned_data
+
+
+class ClientForm(StyledModelForm):
+    class Meta:
+        model = BusinessPartner
+        fields = ["company", "name", "address"]
+        labels = {"name": "Nama Client", "address": "Alamat"}
 
 
 class ProjectSegmentForm(StyledModelForm):
@@ -89,21 +129,52 @@ class ProjectMemberForm(StyledModelForm):
 
 
 class ProjectBudgetLineForm(StyledModelForm):
+    segment_name = forms.CharField(label="Segmen", max_length=200)
+
     class Meta:
         model = ProjectBudgetLine
-        fields = ["segment", "po_item", "line_code", "description", "unit", "planned_qty", "unit_cost", "version", "status"]
+        fields = ["segment_name", "line_code", "foreman_name", "description", "expense_purpose", "unit", "planned_qty", "unit_cost", "status"]
 
     _field_spans = {
-        "segment":     "span-1",
-        "po_item":     "span-1",
+        "segment_name":"span-1",
         "line_code":   "span-1",
         "description": "span-3",
         "unit":        "span-1",
         "planned_qty": "span-1",
         "unit_cost":   "span-1",
-        "version":     "span-1",
         "status":      "span-1",
     }
+
+    def __init__(self, *args, category="materials", **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.segment_id:
+            self.fields["segment_name"].initial = self.instance.segment.segment_name
+        self.fields["planned_qty"].widget.attrs["step"] = "1"
+        if category == "materials":
+            self.fields["line_code"].label = "Nama Item"
+            self.fields["unit"].label = "Satuan"
+            self.fields["unit"].widget = forms.Select(choices=[("Meter", "Meter"), ("Pcs", "Pcs"), ("Roll", "Roll"), ("Set", "Set")])
+            self.fields["planned_qty"].label = "Volume"
+            self.fields.pop("foreman_name")
+            self.fields.pop("expense_purpose")
+        elif category == "services":
+            self.fields["foreman_name"].label = "Nama Mandor"
+            self.fields["line_code"].label = "Jenis Pekerjaan"
+            self.fields["unit"].widget = forms.HiddenInput()
+            self.fields["unit"].initial = "Meter"
+            self.fields["planned_qty"].label = "Panjang Kabel (Meter)"
+            self.fields["unit_cost"].label = "Harga per Meter"
+            self.fields.pop("expense_purpose")
+        elif category == "petty-cash":
+            self.fields["foreman_name"].label = "Nama Mandor"
+            self.fields["description"].label = "Deskripsi"
+            self.fields["expense_purpose"].label = "Tujuan Pengeluaran"
+            self.fields["unit_cost"].label = "Nominal"
+            for name in ("line_code", "unit", "planned_qty"):
+                self.fields.pop(name)
+        else:
+            self.fields.pop("foreman_name")
+            self.fields.pop("expense_purpose")
 
 
 class PurchaseOrderForm(StyledModelForm):
@@ -122,6 +193,10 @@ class PurchaseOrderForm(StyledModelForm):
         "tax_percent":    "span-1",
         "status":         "span-1",
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tax_percent"].label = "Value"
 
 
 class FundRequestForm(StyledModelForm):
@@ -267,6 +342,6 @@ DailyReportItemFormSet = inlineformset_factory(
 
 MaterialUsageFormSet = inlineformset_factory(
     DailyReport, MaterialUsage,
-    fields=["material_name", "qty", "unit", "unit_cost"],
+    fields=["material_name", "qty", "unit"],
     extra=1, can_delete=True,
 )

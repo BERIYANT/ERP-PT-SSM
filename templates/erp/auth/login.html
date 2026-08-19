@@ -1,1 +1,88 @@
-{% load static %}<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Masuk · SSM ERP</title><link rel="stylesheet" href="{% static 'css/erp.css' %}"><style>body{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#071426,#17355c)}.login-shell{width:min(920px,92vw);display:grid;grid-template-columns:1.1fr .9fr;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 25px 70px #0005}.login-brand{padding:54px;background:#0b1d35;color:#fff}.login-brand h1{font-size:34px;margin:20px 0 10px}.login-brand p{color:#aabbd0;line-height:1.7}.login-form{padding:54px;display:grid;align-content:center;gap:15px}.login-form h2{margin:0}.login-form button{width:100%}.login-error{color:#b53b48;font-size:12px}@media(max-width:720px){.login-shell{grid-template-columns:1fr}.login-brand{display:none}}</style></head><body><div class="login-shell"><section class="login-brand"><span class="brand-mark">S</span><h1>SSM ERP</h1><p>Sistem terintegrasi untuk proyek, Purchase Order, RAB, operasional lapangan, pengajuan dana, expense, invoice, dan cash flow.</p></section><form class="login-form" id="loginForm"><div><div class="eyebrow">Secure Access</div><h2>Masuk ke sistem</h2><p class="breadcrumb">Gunakan akun perusahaan yang aktif.</p></div><div class="field"><label>Username</label><input id="username" autocomplete="username" required></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div><div id="error" class="login-error"></div><button class="btn" type="submit">Masuk</button></form></div><script>document.getElementById('loginForm').addEventListener('submit',async function(e){e.preventDefault();const token=document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))?.split('=')[1]||'';const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':token},body:JSON.stringify({username:username.value,password:password.value})});const data=await response.json();if(response.ok&&data.success){location.href=new URLSearchParams(location.search).get('next')||'/erp/'}else{document.getElementById('error').textContent=data.message||'Login gagal.'}});</script></body></html>
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Masuk · SSM ERP</title>
+  <link rel="stylesheet" href="{% static 'css/erp.css' %}?v=20260818-4">
+  <style>
+    *{box-sizing:border-box}
+    html,body{min-height:100%;margin:0;background:#ffffff}
+    body{overflow:hidden;background:#ffffff;color:#14233a;font-family:Inter,Arial,sans-serif}
+    .intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;overflow:hidden;background:#ffffff;opacity:1;visibility:visible;transition:opacity .72s cubic-bezier(.4,0,.2,1),visibility 0s linear .72s}
+    .intro:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 35%,rgba(204,211,214,.18) 100%)}
+    .intro-video-frame{position:absolute;inset:0;display:grid;place-items:center;overflow:visible;background:#ffffff}
+    .intro-video{display:block;width:100%;height:100%;object-fit:contain;object-position:50% 50%;background:#ffffff}
+    .intro-skip{position:absolute;right:24px;top:22px;padding:8px 13px;border:1px solid rgba(20,35,58,.12);border-radius:999px;background:rgba(255,255,255,.72);color:#536174;font:700 10px Inter,Arial,sans-serif;letter-spacing:.05em;cursor:pointer;backdrop-filter:blur(10px);transition:.2s ease}
+    .intro-skip:hover{background:#fff;color:#145cbd;transform:translateY(-1px)}
+    .login-page{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:32px;position:relative;overflow:hidden;background:#ffffff}
+    .orb{position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}.orb.one{width:420px;height:420px;left:-250px;top:-230px;background:rgba(33,111,218,.07)}.orb.two{width:360px;height:360px;right:-200px;bottom:-210px;background:rgba(40,178,100,.07)}
+    .login-stage{width:min(430px,calc(100vw - 36px));position:absolute;left:50%;top:50%;z-index:1;opacity:0;transform:translate(-50%,calc(-50% + 22px)) scale(.985);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1)}
+    .brand{display:flex;align-items:center;justify-content:center;gap:13px;width:max-content;max-width:100%;margin:0 auto 18px}
+    .brand-logo{width:72px;height:72px;flex:0 0 72px;object-fit:contain;filter:drop-shadow(0 9px 18px rgba(20,73,132,.13));animation:float 4s ease-in-out 5s infinite}
+    .brand-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;width:auto;min-width:0;text-align:left;transform:translateY(-1px)}.brand-copy strong,.brand-copy small{position:static;display:block;width:auto;margin-left:0;padding:0;text-align:left;transform:none}.brand-copy strong{margin-top:0;color:#0b1d35;font-size:20px;line-height:1.05;letter-spacing:.035em}.brand-copy small{margin-top:7px;color:#718097;font-size:8px;font-weight:700;line-height:1;letter-spacing:.15em;white-space:nowrap}
+    .login-card{padding:31px 33px 28px;border:1px solid rgba(207,218,231,.86);border-radius:20px;background:rgba(255,255,255,.91);box-shadow:0 28px 80px rgba(28,52,82,.13),0 3px 10px rgba(28,52,82,.04);backdrop-filter:blur(18px)}
+    .login-heading{margin-bottom:23px}.login-heading .eyebrow{margin-bottom:6px}.login-heading h1{margin:0;color:#102039;font-size:25px;letter-spacing:-.03em}.login-heading p{margin:7px 0 0;color:#718097;font-size:12px}
+    .reveal{opacity:0;transform:translateY(12px);transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1)}
+    .field{margin-bottom:15px}.field label{display:block;margin-bottom:7px;color:#405068;font-size:11px;font-weight:700}.field input{width:100%;height:46px;padding:0 14px;border:1px solid #ccd8e5;border-radius:11px;background:#fbfdff;color:#14233a;font:500 13px Inter,Arial,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s,background .2s,transform .2s}.field input:hover{border-color:#adbed1}.field input:focus{border-color:#2475d5;background:#fff;box-shadow:0 0 0 4px rgba(36,117,213,.1);transform:translateY(-1px)}
+    .login-error{min-height:18px;margin:-2px 0 8px;color:#b53b48;font-size:11px}
+    .login-submit{width:100%;height:46px;border:0;border-radius:11px;background:linear-gradient(135deg,#1559b5,#2582e5);color:#fff;font:700 12px Inter,Arial,sans-serif;cursor:pointer;box-shadow:0 9px 22px rgba(31,102,204,.24);transition:transform .16s,box-shadow .16s,filter .16s}.login-submit:hover{filter:brightness(1.05);box-shadow:0 13px 28px rgba(31,102,204,.3);transform:translateY(-2px)}.login-submit:active{transform:scale(.98)}.login-submit:disabled{opacity:.7;cursor:wait}
+    .login-foot{margin:17px 0 0;text-align:center;color:#8a97a8;font-size:10px}
+    .login-success{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(255,255,255,.98);backdrop-filter:blur(14px);opacity:0;visibility:hidden;transition:opacity .55s cubic-bezier(.4,0,.2,1),visibility 0s linear .55s}.login-success__content{display:grid;justify-items:center;transform:translateY(18px) scale(.94);opacity:0;transition:transform .65s cubic-bezier(.16,1,.3,1),opacity .45s ease}.login-success__mark{display:grid;place-items:center;width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,#e8f6ef,#dff1ff);color:#16845a;font-size:34px;font-weight:800;box-shadow:0 15px 38px rgba(24,94,120,.16)}.login-success strong{margin-top:17px;color:#102039;font-size:20px}.login-success small{margin-top:7px;color:#718097;font-size:11px}.login-page,.login-stage{transition:opacity .55s ease,transform .65s cubic-bezier(.16,1,.3,1),filter .55s ease}body.login-complete .login-page{opacity:0;filter:blur(5px);transform:scale(1.018)}body.login-complete .login-success{opacity:1;visibility:visible;transition-delay:0s}body.login-complete .login-success__content{opacity:1;transform:translateY(0) scale(1)}
+    body.login-ready .intro{opacity:0;visibility:hidden}body.login-ready .login-stage{opacity:1;transform:translate(-50%,-50%) scale(1)}body.login-ready .reveal{opacity:1;transform:translateY(0)}body.login-ready .login-heading{transition-delay:.14s}body.login-ready .field.username{transition-delay:.25s}body.login-ready .field.password{transition-delay:.36s}body.login-ready .login-submit{transition-delay:.47s}body.login-ready .login-foot{transition-delay:.58s}
+    @keyframes float{50%{transform:translateY(-4px) scale(1.018)}}
+    @media(max-height:760px){body{overflow:auto}.login-page{padding:18px}.brand{margin-bottom:10px}.brand-logo{width:62px;height:62px;flex-basis:62px}.login-card{padding:24px 28px}.login-heading{margin-bottom:17px}}
+    @media(max-width:520px){html,body,.intro,.intro-video-frame,.login-page,.intro-video{background:#ffffff}.login-page{padding:18px}.login-card{padding:27px 22px}.orb,.intro:after{display:none}.intro-skip{right:14px;top:14px}}
+    @media(prefers-reduced-motion:reduce){.intro{display:none}.login-stage,.reveal{opacity:1;transform:none;transition:none}.brand-logo{animation:none}}
+  </style>
+</head>
+<body>
+  <section class="intro" id="intro" aria-label="Animasi pembuka SSM">
+    <div class="intro-video-frame"><video class="intro-video" id="introVideo" autoplay muted playsinline preload="auto"><source src="{% static 'video/ssm-login-intro.mp4' %}?v=20260818-8" type="video/mp4"></video></div>
+    <button class="intro-skip" id="skipIntro" type="button">LEWATI</button>
+  </section>
+  <main class="login-page">
+    <span class="orb one"></span><span class="orb two"></span>
+    <div class="login-stage">
+      <header class="brand">
+        <img class="brand-logo" src="{% static 'img/logo-ssm-login.png' %}" alt="Logo SSM">
+        <div class="brand-copy"><strong>SSM ERP</strong><small>PROJECT CONTROL</small></div>
+      </header>
+      <form class="login-card" id="loginForm">
+        <div class="login-heading reveal"><div class="eyebrow">SECURE ACCESS</div><h1>Selamat datang</h1><p>Masuk menggunakan akun perusahaan Anda.</p></div>
+        <div class="field username reveal"><label for="username">Username</label><input id="username" name="username" autocomplete="username" placeholder="Masukkan username" required></div>
+        <div class="field password reveal"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required></div>
+        <div id="error" class="login-error" role="alert"></div>
+        <button class="login-submit reveal" id="loginButton" type="submit">Masuk ke Sistem</button>
+        <p class="login-foot reveal">Akses aman untuk sistem pengendalian proyek SSM</p>
+      </form>
+    </div>
+  </main>
+  <div class="login-success" id="loginSuccess" aria-live="polite"><div class="login-success__content"><span class="login-success__mark" aria-hidden="true">✓</span><strong>Login berhasil</strong><small>Membuka dashboard SSM ERP…</small></div></div>
+  <script>
+    const intro=document.getElementById('intro');
+    const introVideo=document.getElementById('introVideo');
+    let introFinished=false;
+    const finishIntro=()=>{if(introFinished)return;introFinished=true;document.body.classList.add('login-ready');setTimeout(()=>document.getElementById('username').focus(),760)};
+    document.getElementById('skipIntro').addEventListener('click',finishIntro);
+    introVideo.addEventListener('ended',finishIntro);
+    introVideo.addEventListener('error',finishIntro);
+    setTimeout(finishIntro,4700);
+    document.getElementById('loginForm').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const button=document.getElementById('loginButton');
+      const error=document.getElementById('error');
+      button.disabled=true;button.textContent='Memproses…';error.textContent='';
+      const token=document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))?.split('=')[1]||'';
+      try{
+        const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':token},body:JSON.stringify({username:username.value,password:password.value})});
+        const data=await response.json();
+        if(response.ok&&data.success){const destination=new URLSearchParams(location.search).get('next')||'/erp/';button.textContent='Berhasil';sessionStorage.setItem('ssm-login-transition','1');requestAnimationFrame(()=>document.body.classList.add('login-complete'));setTimeout(()=>location.assign(destination),1250);return}
+        error.textContent=data.message||'Login gagal.';
+      }catch(_){error.textContent='Tidak dapat terhubung ke server.'}
+      button.disabled=false;button.textContent='Masuk ke Sistem';
+    });
+  </script>
+</body>
+</html>

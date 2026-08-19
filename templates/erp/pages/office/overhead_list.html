@@ -1,0 +1,57 @@
+{% extends 'erp/layouts/app.html' %}
+{% block page_content %}
+<div class="page-toolbar">
+  <div class="toolbar-head">
+    <div>
+      <div class="eyebrow">Finance & Admin</div>
+      <h2>Overhead Kantor</h2>
+      <p>Biaya operasional kantor untuk perusahaan aktif.</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn" href="{% url 'erp:office-overhead-create' %}">+ Tambah Overhead</a>
+    </div>
+  </div>
+</div>
+<form class="filters" method="get">
+  <select name="category">
+    <option value="">Semua Kategori</option>
+    {% for value, label in categories %}
+      <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn">Terapkan</button>
+</form>
+<div class="sheet"><div class="table-wrap"><table><thead><tr><th class="row-index">No</th><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th class="numeric">Nominal</th><th>Bukti</th><th>Disetujui</th><th class="col-aksi">Aksi</th></tr></thead><tbody>
+{% for item in rows %}
+<tr>
+  <td class="row-index">{{ forloop.counter }}</td>
+  <td>{{ item.expense_date }}</td>
+  <td>{{ item.get_category_display }}</td>
+  <td class="description">{{ item.description }}</td>
+  <td class="numeric">Rp {{ item.amount|floatformat:0 }}</td>
+  <td>
+    {% if item.attachment %}
+      <a class="btn secondary compact" href="{% if item.attachment.url %}{{ item.attachment.url }}{% else %}#{% endif %}">Bukti</a>
+    {% else %}
+      <span class="locked-label">-</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if item.is_approved %}
+      <span class="badge APPROVED">&#10003; {{ item.approved_by.nama|default:item.approved_by.username }}</span>
+    {% else %}
+      <span class="badge DRAFT">Menunggu</span>
+    {% endif %}
+  </td>
+  <td class="col-aksi"><div class="inline-actions">
+    <a class="btn secondary compact" href="{% url 'erp:office-overhead-edit' item.id %}">Edit</a>
+    <form method="post" action="{% url 'erp:office-overhead-delete' item.id %}" onsubmit="return confirm('Hapus data overhead ini?')">{% csrf_token %}<button class="btn secondary compact">Hapus</button></form>
+    {% if not item.is_approved %}<form method="post" action="{% url 'erp:office-overhead-approve' item.id %}">{% csrf_token %}<button class="btn compact">Approve</button></form>{% endif %}
+  </div></td>
+</tr>
+{% empty %}
+<tr><td colspan="8" class="empty">Belum ada data overhead kantor.</td></tr>
+{% endfor %}
+</tbody></table></div></div>
+{% endblock %}
+

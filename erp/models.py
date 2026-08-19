@@ -228,6 +228,8 @@ class ProjectBudgetLine(TimeStampedModel):
     po_item = models.ForeignKey(PurchaseOrderItem, on_delete=models.PROTECT, null=True, blank=True, related_name="budget_lines")
     line_code = models.CharField(max_length=80)
     description = models.TextField()
+    foreman_name = models.CharField(max_length=200, blank=True)
+    expense_purpose = models.TextField(blank=True)
     cost_category = models.CharField(max_length=20, choices=CostCategory.choices)
     unit = models.CharField(max_length=30)
     planned_qty = models.DecimalField(max_digits=18, decimal_places=4)
@@ -483,6 +485,40 @@ class CashTransaction(TimeStampedModel):
     class Meta:
         db_table = "erp_cash_transactions"
         indexes = [models.Index(fields=["project", "transaction_date"]), models.Index(fields=["source_type", "source_id"])]
+
+
+class OfficeOverhead(TimeStampedModel):
+    class Category(models.TextChoices):
+        ELECTRICITY = "ELECTRICITY", "Listrik"
+        SALARY = "SALARY", "Gaji Karyawan"
+        MEALS = "MEALS", "Uang Makan"
+        PETTY_CASH = "PETTY_CASH", "Petty Cash"
+        INTERNET = "INTERNET", "Internet & Telepon"
+        RENT = "RENT", "Sewa Kantor"
+        TRANSPORT = "TRANSPORT", "Transportasi"
+        SUPPLIES = "SUPPLIES", "ATK & Perlengkapan"
+        OTHER = "OTHER", "Lain-lain"
+
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, related_name="office_overheads")
+    expense_date = models.DateField()
+    category = models.CharField(max_length=30, choices=Category.choices)
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=18, decimal_places=2)
+    reference_number = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    attachment = models.FileField(upload_to="erp/attachments/overhead/%Y/%m/", blank=True)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="approved_office_overheads")
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="office_overheads")
+
+    class Meta:
+        db_table = "erp_office_overheads"
+        indexes = [models.Index(fields=["company", "expense_date", "category"])]
+        ordering = ["-expense_date", "-id"]
+
+    @property
+    def is_approved(self):
+        return bool(self.approved_by_id and self.approved_at)
 
 
 class Approval(TimeStampedModel):

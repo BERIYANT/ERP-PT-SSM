@@ -16,7 +16,7 @@
 <div class="project-workbook-grid">
 {% for item in projects %}
 <article class="workbook-card">
-  <header><div><small>{{ item.project_code }}</small><h3>{{ item.name }}</h3><p>{{ item.client.name }}</p></div><span class="badge {{ item.status }}">{{ item.status }}</span></header>
+  <header><div><small>{{ item.project_code }}</small><h3>{{ item.name }}</h3><p>{{ item.client.name }}</p></div><span class="project-status {{ item.status }}"><i aria-hidden="true"></i>{{ item.status }}</span></header>
   <div class="workbook-actions">
     <a href="{% url 'erp:project-dashboard' item.id %}"><b>01</b><span>Project Control<small>Ringkasan dan alur kerja</small></span></a>
     <a href="{% url 'erp:project-dashboard' item.id %}?sheet=po-rab"><b>02</b><span>PO &amp; RAB<small>Nilai kontrak dan anggaran</small></span></a>

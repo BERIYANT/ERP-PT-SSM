@@ -3,7 +3,12 @@ from pathlib import Path
 BASE_DIR=Path(__file__).resolve().parent.parent
 SECRET_KEY=os.getenv('SECRET_KEY','dev-change-me')
 DEBUG=os.getenv('DEBUG','1')=='1'
-ALLOWED_HOSTS=os.getenv('ALLOWED_HOSTS','*').split(',')
+ALLOWED_HOSTS=[host.strip() for host in os.getenv('ALLOWED_HOSTS','*').split(',') if host.strip()]
+CSRF_TRUSTED_ORIGINS=[origin.strip() for origin in os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.ngrok-free.app,https://*.ngrok-free.dev,https://*.ngrok.io',
+).split(',') if origin.strip()]
+SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO','https')
 INSTALLED_APPS=['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles','portal','erp']
 MIDDLEWARE=['django.middleware.security.SecurityMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','django.contrib.messages.middleware.MessageMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','portal.middleware.JsonErrorMiddleware']
 ROOT_URLCONF='ssm.urls'; TEMPLATES=[{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[BASE_DIR/'templates'],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.request','django.contrib.messages.context_processors.messages','portal.context.current_user','erp.context_processors.navigation']}}]

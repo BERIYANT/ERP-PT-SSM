@@ -5,22 +5,36 @@
     <div>
       <div class="eyebrow">Budget Worksheet</div>
       <h2>{{ page_title }}</h2>
-      <p>Susunan RAB per item, segmen, volume, satuan, dan harga unit.</p>
+      <p>Susunan data per segmen yang mudah dibaca dan diperbarui.</p>
     </div>
     <div class="toolbar-actions">
-      <span class="badge APPROVED">VERSION CONTROLLED</span>
-      <a class="btn" href="{% url 'erp:project-budget-create' project.id category %}">+ Baris RAB</a>
+      <a class="btn" href="{% url 'erp:project-budget-create' project.id category %}">{% if category == 'petty-cash' %}+ Baris Petty Cash{% else %}+ Baris RAB{% endif %}</a>
     </div>
   </div>
 </div>
 <nav class="workbook-strip toolbar-tabs" aria-label="Worksheet RAB">
   <a class="workbook-tab {% if budget_tab == 'worksheet' %}active{% endif %}" href="?tab=worksheet">{{ page_title }}</a>
-  <a class="workbook-tab {% if budget_tab == 'segments' %}active{% endif %}" href="?tab=segments">Rekap Segment</a>
+  <a class="workbook-tab {% if budget_tab == 'segments' %}active{% endif %}" href="?tab=segments">Rekap Segmen</a>
   <a class="workbook-tab {% if budget_tab == 'variance' %}active{% endif %}" href="?tab=variance">Variance</a>
 </nav>
 <div class="panel sheet"><div class="table-wrap">
-{% if budget_tab == 'segments' %}<table><thead><tr><th>No</th><th>Kode Segment</th><th>Nama Segment</th><th class="numeric">Jumlah Item</th><th class="numeric">Total RAB</th></tr></thead><tbody>{% for item in segment_summary %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.segment__segment_code|default:'UMUM' }}</strong></td><td>{{ item.segment__segment_name|default:'Tanpa Segment' }}</td><td class="numeric">{{ item.item_count }}</td><td class="numeric">Rp {{ item.total|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada rekap segment.</td></tr>{% endfor %}</tbody></table>
-{% elif budget_tab == 'variance' %}<table><thead><tr><th>No</th><th>Kode Item</th><th>Uraian</th><th class="numeric">RAB</th><th class="numeric">Realisasi</th><th class="numeric">Variance</th></tr></thead><tbody>{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.description }}</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td><td class="numeric">Rp 0</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="6" class="empty">Belum ada data variance.</td></tr>{% endfor %}</tbody></table>
-{% else %}<table><thead><tr><th class="row-index">No</th><th>Kode Item</th><th>Segmen / Span</th><th>Uraian Pekerjaan</th><th>Sat.</th><th class="numeric">Volume</th><th class="numeric">Harga Satuan</th><th class="numeric">Jumlah RAB</th><th>Versi</th><th class="col-aksi">Aksi</th></tr></thead><tbody>{% for item in budget_lines %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td class="description">{{ item.description }}</td><td>{{ item.unit }}</td><td class="numeric">{{ item.planned_qty }}</td><td class="numeric">Rp {{ item.unit_cost|floatformat:0 }}</td><td class="numeric"><strong>Rp {{ item.planned_cost|floatformat:0 }}</strong></td><td>V{{ item.version }}</td><td class="col-aksi"><div class="inline-actions"><a class="btn secondary compact" href="{% url 'erp:project-budget-edit' project.id category item.id %}">Edit</a><form method="post" action="{% url 'erp:project-budget-delete' project.id category item.id %}" onsubmit="return confirm('Hapus baris RAB ini?')">{% csrf_token %}<button class="btn secondary compact">Hapus</button></form></div></td></tr>{% empty %}<tr><td colspan="10" class="empty">Belum ada baris {{ page_title|lower }} pada proyek ini.</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% if budget_tab == 'segments' %}
+<table><thead><tr><th>No</th><th>Segmen</th>{% if category == 'services' %}<th class="numeric">Harga per Meter</th><th class="numeric">Volume</th>{% else %}<th class="numeric">Jumlah Item</th>{% endif %}<th class="numeric">Total RAB</th></tr></thead><tbody>
+{% for item in segment_summary %}<tr><td>{{ forloop.counter }}</td><td>{{ item.segment__segment_name|default:'Tanpa Segmen' }}</td>{% if category == 'services' %}<td class="numeric">Rp {{ item.unit_cost|floatformat:0 }}</td><td class="numeric">{{ item.volume|floatformat:"-4" }}</td>{% else %}<td class="numeric">{{ item.item_count }}</td>{% endif %}<td class="numeric">Rp {{ item.total|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">Belum ada rekap segmen.</td></tr>{% endfor %}
+</tbody></table>
+{% elif budget_tab == 'variance' %}
+<table><thead><tr><th>No</th><th>{% if category == 'services' %}Jenis Pekerjaan{% else %}Nama Item{% endif %}</th><th>Uraian</th><th class="numeric">RAB</th><th class="numeric">Realisasi</th><th class="numeric">Variance</th></tr></thead><tbody>
+{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.description }}</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td><td class="numeric">Rp 0</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="6" class="empty">Belum ada data variance.</td></tr>{% endfor %}
+</tbody></table>
+{% elif category == 'petty-cash' %}
+<table><thead><tr><th>No</th><th>Nama Mandor</th><th>Segmen</th><th>Deskripsi</th><th>Tujuan Pengeluaran</th><th class="numeric">Nominal</th><th class="col-aksi">Aksi</th></tr></thead><tbody>
+{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td>{{ item.foreman_name|default:'-' }}</td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td>{{ item.description }}</td><td>{{ item.expense_purpose|default:'-' }}</td><td class="numeric">Rp {{ item.planned_cost|floatformat:0 }}</td><td class="col-aksi"><a class="btn secondary compact" href="{% url 'erp:project-budget-edit' project.id category item.id %}">Edit</a></td></tr>{% empty %}<tr><td colspan="7" class="empty">Belum ada petty cash.</td></tr>{% endfor %}</tbody></table>
+{% elif category == 'services' %}
+<table><thead><tr><th>No</th><th>Jenis Pekerjaan</th><th>Nama Mandor</th><th>Segmen</th><th>Uraian Pekerjaan</th><th class="numeric">Harga per Meter</th><th class="numeric">Panjang Kabel (M)</th><th class="numeric">Total RAB</th><th class="col-aksi">Aksi</th></tr></thead><tbody>
+{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.foreman_name|default:'-' }}</td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td>{{ item.description }}</td><td class="numeric">Rp {{ item.unit_cost|floatformat:0 }}</td><td class="numeric">{{ item.planned_qty|floatformat:"-4" }}</td><td class="numeric"><strong>Rp {{ item.planned_cost|floatformat:0 }}</strong></td><td class="col-aksi"><a class="btn secondary compact" href="{% url 'erp:project-budget-edit' project.id category item.id %}">Edit</a></td></tr>{% empty %}<tr><td colspan="9" class="empty">Belum ada RAB jasa.</td></tr>{% endfor %}</tbody></table>
+{% else %}
+<table><thead><tr><th>No</th><th>Nama Item</th><th>Segmen</th><th>Uraian Pekerjaan</th><th>Satuan</th><th class="numeric">Volume</th><th class="numeric">Harga Satuan</th><th class="numeric">Total RAB</th><th class="col-aksi">Aksi</th></tr></thead><tbody>
+{% for item in budget_lines %}<tr><td>{{ forloop.counter }}</td><td><strong>{{ item.line_code }}</strong></td><td>{{ item.segment.segment_name|default:'Umum' }}</td><td>{{ item.description }}</td><td>{{ item.unit }}</td><td class="numeric">{{ item.planned_qty|floatformat:"-4" }}</td><td class="numeric">Rp {{ item.unit_cost|floatformat:0 }}</td><td class="numeric"><strong>Rp {{ item.planned_cost|floatformat:0 }}</strong></td><td class="col-aksi"><a class="btn secondary compact" href="{% url 'erp:project-budget-edit' project.id category item.id %}">Edit</a></td></tr>{% empty %}<tr><td colspan="9" class="empty">Belum ada RAB material.</td></tr>{% endfor %}</tbody></table>
+{% endif %}
 </div></div>
 {% endblock %}

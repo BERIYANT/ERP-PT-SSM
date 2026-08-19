@@ -5,9 +5,11 @@ from . import views
 app_name = "erp"
 
 urlpatterns = [
+    path("logout/", views.logout_view, name="logout"),
     path("", views.dashboard, name="dashboard"),
     path("projects/", views.project_list, name="project-list"),
     path("projects/create/", views.project_form, name="project-create"),
+    path("clients/create/", views.client_form, name="client-create"),
     path("projects/<int:project_id>/edit/", views.project_form, name="project-edit"),
     path("projects/<int:project_id>/deactivate/", views.project_deactivate, name="project-deactivate"),
     path("projects/<int:project_id>/delete/", views.project_delete, name="project-delete"),
@@ -54,4 +56,9 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("administration/", views.administration, name="administration"),
     path("audit/", views.audit, name="audit"),
+    path("office-overheads/", views.office_overhead_list, name="office-overheads"),
+    path("office-overheads/create/", views.office_overhead_form, name="office-overhead-create"),
+    path("office-overheads/<int:pk>/", views.office_overhead_form, name="office-overhead-edit"),
+    path("office-overheads/<int:pk>/delete/", views.office_overhead_delete, name="office-overhead-delete"),
+    path("office-overheads/<int:pk>/approve/", views.office_overhead_approve, name="office-overhead-approve"),
 ]
