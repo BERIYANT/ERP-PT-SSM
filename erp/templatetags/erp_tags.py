@@ -1,5 +1,5 @@
+from decimal import Decimal
 from django import template
-from django.utils.formats import number_format
 
 register = template.Library()
 
@@ -14,11 +14,29 @@ def widget_span(field):
 
 
 @register.filter
-def number_id(value):
-    """Format angka dengan pemisah ribuan sesuai lokal Indonesia."""
+def number_id(value, decimals=0):
+    """Format angka dengan pemisah ribuan titik (.) dan desimal koma (,) sesuai lokal Indonesia."""
     if value in (None, ""):
-        value = 0
+        return "0"
     try:
-        return number_format(value, decimal_pos=0, use_l10n=True, force_grouping=True)
-    except (TypeError, ValueError):
-        return value
+        # Convert to string first to prevent float precision issues with Decimal
+        val_str = str(value).strip()
+        val = Decimal(val_str)
+        dec = int(decimals)
+        if dec == 0:
+            val_int = int(round(val))
+            return f"{val_int:,}".replace(",", ".")
+        else:
+            fmt = f"{{:,.{dec}f}}".format(val)
+            parts = fmt.split(".")
+            int_part = parts[0].replace(",", ".")
+            dec_part = parts[1] if len(parts) > 1 else "0" * dec
+            return f"{int_part},{dec_part}"
+    except (TypeError, ValueError, Exception):
+        return str(value)
+
+
+@register.filter
+def rupiah(value, decimals=0):
+    """Format rupiah dengan pemisah ribuan titik."""
+    return f"Rp {number_id(value, decimals)}"

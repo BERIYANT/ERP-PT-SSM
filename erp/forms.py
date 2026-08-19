@@ -80,11 +80,11 @@ class ProjectForm(StyledModelForm):
             existing = Project.objects.filter(
                 company=company,
                 project_code__iexact=project_code.strip(),
-            ).exclude(pk=self.instance.pk).first()
+            ).exclude(pk=self.instance.pk if self.instance else None).first()
             if existing:
                 self.add_error(
                     "project_code",
-                    f"Data sudah ada. Segmen '{project_code}' sudah digunakan oleh proyek '{existing.name}'. Gunakan segmen lain atau edit proyek tersebut.",
+                    "Data Ini Sudah Ada",
                 )
         return cleaned_data
 
@@ -183,6 +183,20 @@ class PurchaseOrderForm(StyledModelForm):
         fields = ["project", "po_number", "po_date", "contract_value", "tax_percent", "status"]
         widgets = {
             "po_date": forms.DateInput(attrs={"type": "date"}),
+            "contract_value": forms.NumberInput(attrs={"step": "any", "placeholder": "0"}),
+            "tax_percent": forms.NumberInput(attrs={"step": "any", "placeholder": "11"}),
+        }
+        labels = {
+            "project": "Project",
+            "po_number": "No PO",
+            "po_date": "Tanggal PO",
+            "contract_value": "Nilai PO (Tanpa PPN)",
+            "tax_percent": "PPN (%)",
+            "status": "Status",
+        }
+        help_texts = {
+            "contract_value": "Nilai PO dasar tanpa PPN.",
+            "tax_percent": "Persentase PPN (misal 11%).",
         }
 
     _field_spans = {
@@ -196,7 +210,11 @@ class PurchaseOrderForm(StyledModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["tax_percent"].label = "Value"
+        if not self.instance.pk and "tax_percent" in self.fields and self.initial.get("tax_percent") is None:
+            self.fields["tax_percent"].initial = 11
+        self.fields["contract_value"].label = "Nilai PO (Tanpa PPN)"
+        self.fields["tax_percent"].label = "PPN (%)"
+
 
 
 class FundRequestForm(StyledModelForm):

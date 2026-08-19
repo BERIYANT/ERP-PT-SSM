@@ -614,19 +614,97 @@ def daily_form(request, pk=None):
 
 
 @login_required
+def po_items_detail(request, pk):
+    projects = projects_for_user(request.user)
+    po = get_object_or_404(
+        CustomerPurchaseOrder.objects.select_related("project", "project__client", "created_by").prefetch_related("items"),
+        pk=pk,
+        project__in=projects,
+    )
+    items = list(po.items.all().order_by("id"))
+    total_qty = sum((item.qty for item in items), Decimal("0"))
+    total_amount = sum((item.amount for item in items), Decimal("0"))
+    subtotal = po.nilai_tanpa_ppn
+    ppn_val = po.nilai_ppn
+    grand_total = po.nilai_dengan_ppn
+    context = _base_context(
+        "purchase_orders",
+        f"Rincian Item Purchase Order — {po.po_number}",
+        purchase_order=po,
+        project=po.project,
+        items=items,
+        total_items=len(items),
+        total_qty=total_qty,
+        total_amount=total_amount,
+        subtotal=subtotal,
+        ppn_val=ppn_val,
+        grand_total=grand_total,
+    )
+    return render(request, "erp/pages/documents/po_detail.html", context)
+
+
+@login_required
 def invoice_form(request, pk=None):
     if not may_manage_master(request.user):
         raise PermissionDenied
-    instance = get_object_or_404(Invoice, pk=pk, project__in=projects_for_user(request.user)) if pk else Invoice()
+    import json
+    projects = projects_for_user(request.user)
+    instance = get_object_or_404(Invoice, pk=pk, project__in=projects) if pk else Invoice()
+    project_id_query = request.GET.get("project")
+    if not pk and project_id_query and not request.POST:
+        try:
+            proj = projects.get(pk=project_id_query)
+            instance.project = proj
+            latest_po = CustomerPurchaseOrder.objects.filter(project=proj).order_by("-po_date", "-id").first()
+            if latest_po:
+                instance.purchase_order = latest_po
+        except (Project.DoesNotExist, ValueError):
+            pass
+
     def prepare(obj):
         obj.created_by = request.user
         obj.invoice_number = obj.invoice_number or next_document_number("INV", Invoice, obj.project, obj.invoice_date, "invoice_number")
-    result = _save_header_detail(request, InvoiceForm, InvoiceItemFormSet, instance, "invoices", "Form Invoice", prepare)
-    if isinstance(result, Invoice):
-        sync_invoice_total(result)
-        messages.success(request, "Invoice berhasil disimpan.")
-        return redirect("erp:invoice-list")
-    return result
+
+    pos_data = list(
+        CustomerPurchaseOrder.objects.filter(project__in=projects)
+        .values("id", "project_id", "po_number", "contract_value")
+        .order_by("-po_date", "-id")
+    )
+    for p in pos_data:
+        p["contract_value"] = str(p["contract_value"])
+
+    form = InvoiceForm(request.POST or None, instance=instance)
+    form.fields["project"].queryset = projects
+    formset = InvoiceItemFormSet(request.POST or None, instance=instance, prefix="items")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        with transaction.atomic():
+            document = form.save(commit=False)
+            prepare(document)
+            document.full_clean()
+            document.save()
+            formset.instance = document
+            children = formset.save(commit=False)
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            for child in children:
+                child.full_clean()
+                child.save()
+            formset.save_m2m()
+            sync_invoice_total(document)
+            messages.success(request, "Invoice berhasil disimpan.")
+            return redirect("erp:invoice-list")
+    return render(
+        request,
+        "erp/pages/form.html",
+        _base_context(
+            "invoices",
+            "Form Invoice",
+            form=form,
+            formset=formset,
+            project_pos_json=json.dumps(pos_data),
+        ),
+    )
+
 
 
 @login_required

@@ -130,6 +130,22 @@ class Project(TimeStampedModel):
             raise ValidationError("Pelanggan harus berasal dari perusahaan yang sama.")
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValidationError("Tanggal selesai tidak boleh sebelum tanggal mulai.")
+        if self.company_id and self.project_code:
+            existing = Project.objects.filter(
+                company_id=self.company_id,
+                project_code__iexact=self.project_code.strip(),
+            ).exclude(pk=self.pk).first()
+            if existing:
+                raise ValidationError({"project_code": "Data Ini Sudah Ada"})
+
+    def validate_unique(self, exclude=None):
+        try:
+            super().validate_unique(exclude=exclude)
+        except ValidationError as e:
+            err_dict = e.message_dict if hasattr(e, "message_dict") else {}
+            if "project_code" in err_dict or "uq_project_company_code" in str(e) or "__all__" in err_dict:
+                raise ValidationError({"project_code": ["Data Ini Sudah Ada"]})
+            raise
 
     def __str__(self):
         return f"{self.project_code} - {self.name}"
@@ -193,8 +209,28 @@ class CustomerPurchaseOrder(TimeStampedModel):
         constraints = [models.UniqueConstraint(fields=["project", "po_number"], name="uq_project_po_number")]
         indexes = [models.Index(fields=["project", "status", "po_date"])]
 
+    @property
+    def nilai_po(self):
+        return self.contract_value
+
+    @property
+    def nilai_tanpa_ppn(self):
+        return self.contract_value
+
+    @property
+    def nilai_ppn(self):
+        tax = self.tax_percent or Decimal("0")
+        if tax > 0:
+            return (self.contract_value * tax) / Decimal("100")
+        return Decimal("0")
+
+    @property
+    def nilai_dengan_ppn(self):
+        return self.contract_value + self.nilai_ppn
+
     def __str__(self):
         return self.po_number
+
 
 
 class PurchaseOrderItem(TimeStampedModel):
