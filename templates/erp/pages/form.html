@@ -133,6 +133,10 @@
   </div>
 </form>
 
+{% if project_pos_json %}
+<script id="project-pos-data" type="application/json">{{ project_pos_json|safe }}</script>
+{% endif %}
+
 <script>
 (function () {
   var tabs   = Array.from(document.querySelectorAll('.form-tabs [data-panel]'));
@@ -172,7 +176,107 @@
     openPanel('document-validation');
     {% endif %}
   }
+
+  function formatRupiah(num) {
+    var n = parseFloat(num);
+    if (isNaN(n)) return "Rp 0";
+    var rounded = Math.round(n);
+    return "Rp " + rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  // Live calculation for Purchase Order form (Nilai PO, Tanpa PPN, Dengan PPN)
+  var contractValInput = document.querySelector('#id_contract_value');
+  var taxPercentInput  = document.querySelector('#id_tax_percent');
+  if (contractValInput) {
+    var calcBox = document.createElement('div');
+    calcBox.className = 'field span-3';
+    calcBox.style.cssText = 'background: var(--bg-surface-2, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 8px; padding: 12px 16px; margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;';
+    calcBox.innerHTML = '<div style="font-size: 0.85em; color: var(--text-muted, #64748b);">Nilai PO (Tanpa PPN):<br><strong id="live-tanpa-ppn" style="font-size: 1.15em; color: var(--text-heading, #0f172a);">Rp 0</strong></div>' +
+                        '<div style="font-size: 0.85em; color: var(--text-muted, #64748b);">PPN (<span id="live-tax-label">11</span>%):<br><strong id="live-ppn-val" style="font-size: 1.15em; color: var(--text-heading, #0f172a);">Rp 0</strong></div>' +
+                        '<div style="font-size: 0.85em; color: var(--text-muted, #64748b);">Total (Dengan PPN):<br><strong id="live-dengan-ppn" style="font-size: 1.15em; color: #10b981;">Rp 0</strong></div>';
+    contractValInput.closest('.form-grid').appendChild(calcBox);
+
+    function updatePOCalcs() {
+      var val = parseFloat(contractValInput.value) || 0;
+      var tax = taxPercentInput ? (parseFloat(taxPercentInput.value) || 0) : 0;
+      var ppn = (val * tax) / 100;
+      var total = val + ppn;
+      document.getElementById('live-tanpa-ppn').textContent = formatRupiah(val);
+      if (document.getElementById('live-tax-label')) document.getElementById('live-tax-label').textContent = tax;
+      document.getElementById('live-ppn-val').textContent = formatRupiah(ppn);
+      document.getElementById('live-dengan-ppn').textContent = formatRupiah(total);
+    }
+    contractValInput.addEventListener('input', updatePOCalcs);
+    if (taxPercentInput) taxPercentInput.addEventListener('input', updatePOCalcs);
+    updatePOCalcs();
+  }
+
+  // Invoice Form: Otomatis nomor PO muncul saat user pilih project
+  var projectSelect = document.querySelector('#id_project');
+  var poSelect      = document.querySelector('#id_purchase_order');
+  var posDataEl     = document.getElementById('project-pos-data');
+  if (projectSelect && poSelect && posDataEl) {
+    var allPOs = [];
+    try {
+      allPOs = JSON.parse(posDataEl.textContent || '[]');
+    } catch (e) {
+      allPOs = [];
+    }
+
+    var originalSelectedPO = poSelect.value;
+
+    function syncPOsForProject(isInitial) {
+      var selectedProjectId = projectSelect.value;
+      if (!selectedProjectId) {
+        poSelect.innerHTML = '<option value="">---------</option>';
+        return;
+      }
+
+      var filteredPOs = allPOs.filter(function (p) {
+        return String(p.project_id) === String(selectedProjectId);
+      });
+
+      poSelect.innerHTML = '<option value="">---------</option>';
+      if (filteredPOs.length === 0) {
+        var opt = document.createElement('option');
+        opt.value = "";
+        opt.disabled = true;
+        opt.textContent = "-- Belum ada PO untuk project ini --";
+        poSelect.appendChild(opt);
+        return;
+      }
+
+      var foundOriginal = false;
+      filteredPOs.forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        var valStr = p.contract_value ? " (" + formatRupiah(p.contract_value) + ")" : "";
+        opt.textContent = p.po_number + valStr;
+        if (String(p.id) === String(originalSelectedPO)) {
+          opt.selected = true;
+          foundOriginal = true;
+        }
+        poSelect.appendChild(opt);
+      });
+
+      // If initial and matching original exists, keep it; otherwise select the first PO automatically
+      if (!foundOriginal && filteredPOs.length > 0) {
+        poSelect.value = filteredPOs[0].id;
+      }
+    }
+
+    projectSelect.addEventListener('change', function () {
+      originalSelectedPO = "";
+      syncPOsForProject(false);
+    });
+
+    // Run on initial load
+    if (projectSelect.value) {
+      syncPOsForProject(true);
+    }
+  }
 }());
 </script>
 
 {% endblock %}
+

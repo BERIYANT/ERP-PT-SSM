@@ -1,4 +1,5 @@
 {% extends 'erp/layouts/project.html' %}
+{% load erp_tags %}
 {% block project_content %}
 <div class="page-toolbar">
   <div class="toolbar-head">
@@ -13,5 +14,6 @@
   </div>
 </div>
 <div class="workbook-strip toolbar-tabs"><span class="workbook-tab active">Kasbon Mandor</span><span class="workbook-tab">Pencairan</span><span class="workbook-tab">Realisasi</span></div>
-<div class="panel sheet"><div class="table-wrap"><table><thead><tr><th class="row-index">No</th><th>Nomor Pengajuan</th><th>Tanggal</th><th>Mandor / Pemohon</th><th class="numeric">Pengajuan</th><th class="numeric">Pencairan</th><th>Status</th></tr></thead><tbody>{% for item in funds %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ item.request_number }}</strong></td><td>{{ item.request_date }}</td><td>{{ item.requested_by.nama }}</td><td class="numeric">Rp {{ item.total_requested|floatformat:0 }}</td><td class="numeric">{% for cash in item.disbursements.all %}Rp {{ cash.amount|floatformat:0 }}{% if not forloop.last %}<br>{% endif %}{% empty %}-{% endfor %}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="7" class="empty">Belum ada kasbon Mandor.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="panel sheet"><div class="table-wrap"><table><thead><tr><th class="row-index">No</th><th>Nomor Pengajuan</th><th>Tanggal</th><th>Mandor / Pemohon</th><th class="numeric">Pengajuan</th><th class="numeric">Pencairan</th><th>Status</th></tr></thead><tbody>{% for item in funds %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ item.request_number }}</strong></td><td>{{ item.request_date }}</td><td>{{ item.requested_by.nama }}</td><td class="numeric">Rp {{ item.total_requested|number_id }}</td><td class="numeric">{% for cash in item.disbursements.all %}Rp {{ cash.amount|number_id }}{% if not forloop.last %}<br>{% endif %}{% empty %}-{% endfor %}</td><td><span class="badge {{ item.status }}">{{ item.status }}</span></td></tr>{% empty %}<tr><td colspan="7" class="empty">Belum ada kasbon Mandor.</td></tr>{% endfor %}</tbody></table></div></div>
 {% endblock %}
+

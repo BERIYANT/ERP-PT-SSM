@@ -1,4 +1,5 @@
 {% extends 'erp/layouts/app.html' %}
+{% load erp_tags %}
 {% block page_content %}
 <div class="page-toolbar">
   <div class="toolbar-head">
@@ -28,7 +29,7 @@
   <td>{{ item.expense_date }}</td>
   <td>{{ item.get_category_display }}</td>
   <td class="description">{{ item.description }}</td>
-  <td class="numeric">Rp {{ item.amount|floatformat:0 }}</td>
+  <td class="numeric">Rp {{ item.amount|number_id }}</td>
   <td>
     {% if item.attachment %}
       <a class="btn secondary compact" href="{% if item.attachment.url %}{{ item.attachment.url }}{% else %}#{% endif %}">Bukti</a>
@@ -54,4 +55,5 @@
 {% endfor %}
 </tbody></table></div></div>
 {% endblock %}
+
 

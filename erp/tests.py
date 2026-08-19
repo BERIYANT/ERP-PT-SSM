@@ -71,3 +71,53 @@ class ErpWorkflowTests(TestCase):
             [("INV-1", Decimal("60"), date.today(), "1"), ("INV-2", Decimal("50"), date.today(), "2")],
         )
         self.assertEqual(sum((row[1] for row in rows), Decimal("0")), Decimal("100.00"))
+
+    def test_revision_number_formatting_with_dots(self):
+        from erp.templatetags.erp_tags import number_id, rupiah
+        self.assertEqual(number_id(1453173218), "1.453.173.218")
+        self.assertEqual(number_id(172022000), "172.022.000")
+        self.assertEqual(number_id(0), "0")
+        self.assertEqual(number_id(Decimal("147680.00"), 2), "147.680,00")
+        self.assertEqual(rupiah(1453173218), "Rp 1.453.173.218")
+
+    def test_revision_po_values_properties(self):
+        self.po.tax_percent = Decimal("11")
+        self.po.contract_value = Decimal("1000000")
+        self.po.save()
+        self.assertEqual(self.po.nilai_po, Decimal("1000000"))
+        self.assertEqual(self.po.nilai_tanpa_ppn, Decimal("1000000"))
+        self.assertEqual(self.po.nilai_ppn, Decimal("110000"))
+        self.assertEqual(self.po.nilai_dengan_ppn, Decimal("1110000"))
+
+    def test_revision_duplicate_project_message(self):
+        from erp.forms import ProjectForm
+        dup_project = Project(company=self.company, client=self.project.client, project_code="P1", name="Duplicate P1")
+        with self.assertRaises(ValidationError) as ctx:
+            dup_project.full_clean()
+        self.assertIn("Data Ini Sudah Ada", str(ctx.exception))
+
+        form = ProjectForm(data={
+            "company": self.company.id,
+            "client": self.project.client.id,
+            "project_code": "P1",
+            "name": "Another P1",
+            "status": "ACTIVE"
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("Data Ini Sudah Ada", form.errors.get("project_code", []))
+
+    def test_revision_po_items_detail_view(self):
+        client = Client(); client.force_login(self.admin)
+        res = client.get(f"/erp/purchase-orders/{self.po.id}/items/")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, self.po.po_number)
+        self.assertContains(res, self.po_item.description)
+        self.assertContains(res, "Rincian Item Purchase Order")
+
+    def test_revision_invoice_form_pos_data(self):
+        client = Client(); client.force_login(self.admin)
+        res = client.get(f"/erp/invoices/create/?project={self.project.id}")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "project-pos-data")
+        self.assertContains(res, self.po.po_number)
+
