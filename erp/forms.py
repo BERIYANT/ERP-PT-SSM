@@ -41,11 +41,11 @@ class StyledModelForm(forms.ModelForm):
 class OfficeOverheadForm(StyledModelForm):
     class Meta:
         model = OfficeOverhead
-        fields = ["expense_date", "category", "description", "amount", "reference_number", "notes"]
+        fields = ["expense_date", "category", "description", "amount", "attachment", "notes"]
         widgets = {"expense_date": forms.DateInput(attrs={"type": "date"}), "amount": forms.NumberInput(attrs={"min": "0", "step": "1"}), "notes": forms.Textarea(attrs={"rows": 3})}
-        labels = {"expense_date": "Tanggal", "category": "Kategori", "description": "Keterangan", "amount": "Nominal", "reference_number": "Nomor Referensi / Bukti", "notes": "Catatan"}
+        labels = {"expense_date": "Tanggal", "category": "Kategori", "description": "Keterangan", "amount": "Nominal", "attachment": "Upload Foto Bukti", "notes": "Catatan"}
 
-    _field_spans = {"expense_date": "span-1", "category": "span-1", "description": "span-2", "amount": "span-1", "reference_number": "span-1", "notes": "span-3"}
+    _field_spans = {"expense_date": "span-1", "category": "span-1", "description": "span-2", "amount": "span-1", "attachment": "span-1", "notes": "span-3"}
 
 
 class ProjectForm(StyledModelForm):
@@ -129,11 +129,12 @@ class ProjectMemberForm(StyledModelForm):
 
 
 class ProjectBudgetLineForm(StyledModelForm):
-    segment_name = forms.CharField(label="Segmen", max_length=200)
+    segment_name = forms.ChoiceField(label="Segmen")
+    total_rab = forms.DecimalField(label="Total RAB", required=False, disabled=True)
 
     class Meta:
         model = ProjectBudgetLine
-        fields = ["segment_name", "line_code", "foreman_name", "description", "expense_purpose", "unit", "planned_qty", "unit_cost", "status"]
+        fields = ["segment_name", "line_code", "foreman_name", "worker_count", "span", "description", "expense_purpose", "unit", "planned_qty", "unit_cost", "total_rab", "status"]
 
     _field_spans = {
         "segment_name":"span-1",
@@ -145,10 +146,13 @@ class ProjectBudgetLineForm(StyledModelForm):
         "status":      "span-1",
     }
 
-    def __init__(self, *args, category="materials", **kwargs):
+    def __init__(self, *args, category="materials", project=None, **kwargs):
         super().__init__(*args, **kwargs)
+        segments = project.segments.order_by("segment_name") if project else ProjectSegment.objects.none()
+        self.fields["segment_name"].choices = [(item.segment_name, item.segment_name) for item in segments]
         if self.instance and self.instance.segment_id:
             self.fields["segment_name"].initial = self.instance.segment.segment_name
+        self.fields["total_rab"].initial = self.instance.planned_cost if self.instance and self.instance.pk else 0
         self.fields["planned_qty"].widget.attrs["step"] = "1"
         if category == "materials":
             self.fields["line_code"].label = "Nama Item"
@@ -157,6 +161,8 @@ class ProjectBudgetLineForm(StyledModelForm):
             self.fields["planned_qty"].label = "Volume"
             self.fields.pop("foreman_name")
             self.fields.pop("expense_purpose")
+            for name in ("worker_count", "span", "total_rab"):
+                self.fields.pop(name)
         elif category == "services":
             self.fields["foreman_name"].label = "Nama Mandor"
             self.fields["line_code"].label = "Jenis Pekerjaan"
@@ -165,6 +171,8 @@ class ProjectBudgetLineForm(StyledModelForm):
             self.fields["planned_qty"].label = "Panjang Kabel (Meter)"
             self.fields["unit_cost"].label = "Harga per Meter"
             self.fields.pop("expense_purpose")
+            self.fields.pop("worker_count")
+            self.fields.pop("span")
         elif category == "petty-cash":
             self.fields["foreman_name"].label = "Nama Mandor"
             self.fields["description"].label = "Deskripsi"
@@ -172,8 +180,17 @@ class ProjectBudgetLineForm(StyledModelForm):
             self.fields["unit_cost"].label = "Nominal"
             for name in ("line_code", "unit", "planned_qty"):
                 self.fields.pop(name)
+            for name in ("worker_count", "span", "total_rab"):
+                self.fields.pop(name)
         else:
-            self.fields.pop("foreman_name")
+            self.fields["foreman_name"].label = "Nama Mandor"
+            self.fields["worker_count"].label = "Jumlah Pekerja"
+            self.fields["span"].label = "Span"
+            self.fields["line_code"].label = "Item Pekerjaan"
+            self.fields["description"].label = "Keterangan"
+            self.fields["planned_qty"].label = "Volume Progress"
+            self.fields["unit_cost"].label = "Harga Satuan"
+            self.fields["total_rab"].label = "Nilai Opname"
             self.fields.pop("expense_purpose")
 
 
@@ -267,7 +284,7 @@ class ProgressReportForm(StyledModelForm):
 class InvoiceForm(StyledModelForm):
     class Meta:
         model = Invoice
-        fields = ["project", "purchase_order", "invoice_date", "due_date", "tax"]
+        fields = ["project", "purchase_order", "invoice_date", "due_date", "status"]
         widgets = {
             "invoice_date": forms.DateInput(attrs={"type": "date"}),
             "due_date":     forms.DateInput(attrs={"type": "date"}),
@@ -278,7 +295,7 @@ class InvoiceForm(StyledModelForm):
         "purchase_order": "span-2",
         "invoice_date":   "span-1",
         "due_date":       "span-1",
-        "tax":            "span-1",
+        "status":         "span-1",
     }
 
 

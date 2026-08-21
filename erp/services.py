@@ -56,9 +56,12 @@ def sync_expense_total(expense_report):
 
 def sync_invoice_total(invoice):
     subtotal = invoice.items.aggregate(value=Sum("amount"))["value"] or Decimal("0")
+    if subtotal == 0 and invoice.purchase_order_id:
+        subtotal = invoice.purchase_order.contract_value
     invoice.subtotal = subtotal
+    invoice.tax = invoice.purchase_order.nilai_ppn if invoice.purchase_order_id else Decimal("0")
     invoice.total = subtotal + invoice.tax
-    invoice.save(update_fields=["subtotal", "total", "updated_at"])
+    invoice.save(update_fields=["subtotal", "tax", "total", "updated_at"])
     return invoice.total
 
 

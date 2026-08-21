@@ -113,7 +113,7 @@ def dashboard(request):
 def project_list(request):
     projects = projects_for_user(request.user)
     tab = request.GET.get("tab", "register")
-    if tab not in {"register", "segments", "members"}:
+    if tab not in {"register", "segments", "members", "clients"}:
         raise Http404
     context = _base_context(
         "projects",
@@ -122,6 +122,7 @@ def project_list(request):
         project_tab=tab,
         segments=ProjectSegment.objects.filter(project__in=projects).select_related("project").order_by("project__project_code", "segment_code") if tab == "segments" else (),
         project_members=ProjectMember.objects.filter(project__in=projects).select_related("project", "segment", "employee").order_by("project__project_code", "employee__name") if tab == "members" else (),
+        clients=BusinessPartner.objects.filter(company=company_for_user(request.user), partner_type=BusinessPartner.PartnerType.CLIENT).order_by("name") if tab == "clients" else (),
     )
     return render(request, "erp/pages/projects/list.html", context)
 
@@ -144,17 +145,32 @@ def project_form(request, project_id=None):
 
 @login_required
 @transaction.atomic
-def client_form(request):
+def client_form(request, pk=None):
     if not may_manage_master(request.user):
         raise PermissionDenied
-    form = ClientForm(request.POST or None)
+    instance = get_object_or_404(BusinessPartner, pk=pk, company=company_for_user(request.user), partner_type=BusinessPartner.PartnerType.CLIENT) if pk else None
+    form = ClientForm(request.POST or None, instance=instance)
     if form.is_valid():
         client = form.save(commit=False)
         client.partner_type = BusinessPartner.PartnerType.CLIENT
         client.save()
         messages.success(request, "Client berhasil ditambahkan.")
-        return redirect("erp:project-create")
+        return redirect("erp:project-list")
     return render(request, "erp/pages/form.html", _base_context("projects", "Tambah Client", form=form, formset=None))
+
+
+@login_required
+@require_POST
+def client_delete(request, pk):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    client = get_object_or_404(BusinessPartner, pk=pk, company=company_for_user(request.user), partner_type=BusinessPartner.PartnerType.CLIENT)
+    try:
+        client.delete()
+        messages.success(request, "Client berhasil dihapus.")
+    except ProtectedError:
+        messages.error(request, "Client masih dipakai proyek dan tidak dapat dihapus.")
+    return redirect("erp:project-list")
 
 
 @login_required
@@ -196,7 +212,8 @@ def project_budget(request, project_id, category):
     segment_summary = lines.values("segment__segment_name").annotate(
         total=Sum("planned_cost"), item_count=Count("id"), volume=Sum("planned_qty"), unit_cost=Sum("unit_cost")
     ).order_by("segment__segment_name") if tab == "segments" else ()
-    return render(request, "erp/pages/project/budget.html", _project_context(project, category, title_map[category], budget_lines=lines, category=category, budget_tab=tab, segment_summary=segment_summary))
+    total_rab = lines.aggregate(value=Sum("planned_cost"))["value"] or 0
+    return render(request, "erp/pages/project/budget.html", _project_context(project, category, title_map[category], budget_lines=lines, category=category, budget_tab=tab, segment_summary=segment_summary, total_rab=total_rab))
 
 
 @login_required
@@ -209,16 +226,12 @@ def project_budget_form(request, project_id, category, pk=None):
     if not may_manage_master(request.user):
         raise PermissionDenied
     instance = get_object_or_404(ProjectBudgetLine, pk=pk, project=project, cost_category=category_map[category]) if pk else None
-    form = ProjectBudgetLineForm(request.POST or None, instance=instance, category=category)
+    form = ProjectBudgetLineForm(request.POST or None, instance=instance, category=category, project=project)
     if form.is_valid():
         line = form.save(commit=False)
         line.project = project
         segment_name = form.cleaned_data["segment_name"].strip()
-        segment, _ = ProjectSegment.objects.get_or_create(
-            project=project,
-            segment_code=segment_name.upper().replace(" ", "-")[:80],
-            defaults={"segment_name": segment_name, "location": segment_name},
-        )
+        segment = get_object_or_404(ProjectSegment, project=project, segment_name=segment_name)
         line.segment = segment
         if category == "petty-cash":
             line.line_code = f"PC-{ProjectBudgetLine.objects.filter(project=project, cost_category='PETTY_CASH').count() + 1:04d}"
@@ -227,7 +240,7 @@ def project_budget_form(request, project_id, category, pk=None):
         line.cost_category = category_map[category]
         line.full_clean()
         line.save()
-        messages.success(request, "Baris RAB berhasil disimpan.")
+        messages.success(request, "Baris berhasil disimpan.")
         return redirect(f"erp:project-{category}", project_id=project.id)
     return render(request, "erp/pages/form.html", _project_context(project, category, "Form RAB", form=form, formset=None))
 
@@ -473,7 +486,7 @@ def fund_form(request, pk=None):
 
 @login_required
 def expense_form(request, pk=None):
-    instance = get_object_or_404(ExpenseReport, pk=pk, project__in=projects_for_user(request.user))
+    instance = get_object_or_404(ExpenseReport, pk=pk, project__in=projects_for_user(request.user)) if pk else ExpenseReport()
     def prepare(obj):
         obj.submitted_by = request.user
         obj.report_number = obj.report_number or next_document_number("ER", ExpenseReport, obj.project, obj.report_date, "report_number")
@@ -718,10 +731,17 @@ def document_action(request, document_type, pk, action):
         "progress": ProgressReport,
         "invoice": Invoice,
     }
-    if document_type not in mapping or action not in {"submit", "approve", "revision", "reject"}:
+    if document_type not in mapping or action not in {"submit", "approve", "revision", "reject", "complete"}:
         raise Http404
     document = get_object_or_404(mapping[document_type].objects.select_for_update(), pk=pk, project__in=projects_for_user(request.user))
-    if action == "submit":
+    if action == "complete":
+        allowed = {DocumentStatus.APPROVED}
+        if document_type == "invoice":
+            allowed.add(DocumentStatus.PAID)
+        if document.status not in allowed or not may_manage_master(request.user):
+            raise PermissionDenied
+        document.status = DocumentStatus.CLOSED
+    elif action == "submit":
         if document.status not in {DocumentStatus.DRAFT, DocumentStatus.REVISION}:
             raise ValidationError("Dokumen tidak dapat diajukan dari status ini.")
         document.status = DocumentStatus.SUBMITTED
@@ -753,7 +773,10 @@ def document_delete(request, document_type, pk):
         raise Http404
     model, redirect_name = mapping[document_type]
     obj = get_object_or_404(model, pk=pk, project__in=projects_for_user(request.user))
-    if hasattr(obj, "status") and obj.status not in {DocumentStatus.DRAFT, DocumentStatus.REVISION}:
+    deletable = {DocumentStatus.DRAFT, DocumentStatus.REVISION}
+    if document_type == "invoice":
+        deletable.add(DocumentStatus.APPROVED)
+    if hasattr(obj, "status") and obj.status not in deletable:
         messages.error(request, "Hanya data Draft atau Perlu Revisi yang dapat dihapus.")
         return redirect(redirect_name)
     try:
