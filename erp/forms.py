@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.forms import inlineformset_factory
 
 from .models import (
@@ -7,6 +8,7 @@ from .models import (
     CustomerPurchaseOrder,
     DailyReport,
     DailyReportItem,
+    Employee,
     ExpenseItem,
     ExpenseReport,
     FundRequest,
@@ -14,6 +16,7 @@ from .models import (
     Invoice,
     InvoiceItem,
     MaterialUsage,
+    MaterialMovement,
     OfficeOverhead,
     ProgressItem,
     ProgressReport,
@@ -22,6 +25,9 @@ from .models import (
     ProjectMember,
     ProjectSegment,
     PurchaseOrderItem,
+    Role,
+    UserOrganization,
+    WarehouseMaterial,
 )
 
 
@@ -38,6 +44,58 @@ class StyledModelForm(forms.ModelForm):
             field.widget.attrs["data-span"] = span
 
 
+class AdministrationUserForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=100)
+    nama = forms.CharField(label="Nama Lengkap", max_length=150)
+    email = forms.EmailField(label="Email", required=False)
+    role = forms.ModelChoiceField(label="Role", queryset=Role.objects.none())
+    employee = forms.ModelChoiceField(label="Pegawai", queryset=Employee.objects.none(), required=False)
+    password = forms.CharField(label="Password Baru", widget=forms.PasswordInput, required=False)
+    is_active = forms.BooleanField(label="Akun Aktif", required=False, initial=True)
+
+    def __init__(self, *args, company=None, user_instance=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.company = company
+        self.user_instance = user_instance
+        self.fields["role"].queryset = Role.objects.order_by("name")
+        self.fields["employee"].queryset = Employee.objects.filter(company=company).order_by("name") if company else Employee.objects.none()
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+        if user_instance and not self.is_bound:
+            organization = UserOrganization.objects.filter(user=user_instance).first()
+            self.initial.update({
+                "username": user_instance.username,
+                "nama": user_instance.nama,
+                "email": user_instance.email or "",
+                "role": organization.role_id if organization else None,
+                "employee": organization.employee_id if organization else None,
+                "is_active": user_instance.is_active,
+            })
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        queryset = get_user_model().objects.filter(username__iexact=username)
+        if self.user_instance:
+            queryset = queryset.exclude(pk=self.user_instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError("Username sudah digunakan.")
+        return username
+
+    def clean_employee(self):
+        employee = self.cleaned_data.get("employee")
+        if employee and UserOrganization.objects.filter(employee=employee).exclude(user=self.user_instance).exists():
+            raise forms.ValidationError("Pegawai sudah terhubung ke akun lain.")
+        return employee
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password", "")
+        if not self.user_instance and not password:
+            raise forms.ValidationError("Password wajib diisi untuk akun baru.")
+        if password and len(password) < 8:
+            raise forms.ValidationError("Password minimal 8 karakter.")
+        return password
+
+
 class OfficeOverheadForm(StyledModelForm):
     class Meta:
         model = OfficeOverhead
@@ -46,6 +104,38 @@ class OfficeOverheadForm(StyledModelForm):
         labels = {"expense_date": "Tanggal", "category": "Kategori", "description": "Keterangan", "amount": "Nominal", "attachment": "Upload Foto Bukti", "notes": "Catatan"}
 
     _field_spans = {"expense_date": "span-1", "category": "span-1", "description": "span-2", "amount": "span-1", "attachment": "span-1", "notes": "span-3"}
+
+
+class WarehouseMaterialForm(StyledModelForm):
+    class Meta:
+        model = WarehouseMaterial
+        fields = ["name", "description", "unit", "warehouse_qty", "image", "is_active"]
+        labels = {"name": "Nama Material", "description": "Deskripsi", "unit": "Satuan", "warehouse_qty": "Stok Awal / Stok Gudang", "image": "Gambar Contoh Material", "is_active": "Material Aktif"}
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+            "warehouse_qty": forms.NumberInput(attrs={"min": "0", "step": "0.0001"}),
+        }
+
+    _field_spans = {"name": "span-2", "description": "span-3", "unit": "span-1", "warehouse_qty": "span-1", "image": "span-2", "is_active": "span-1"}
+
+
+class MaterialMovementForm(StyledModelForm):
+    class Meta:
+        model = MaterialMovement
+        fields = ["material", "project", "quantity", "movement_date", "notes"]
+        labels = {"material": "Material", "project": "Proyek Tujuan", "quantity": "Jumlah", "movement_date": "Tanggal", "notes": "Keterangan"}
+        widgets = {
+            "quantity": forms.NumberInput(attrs={"min": "0.0001", "step": "0.0001"}),
+            "movement_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    _field_spans = {"material": "span-1", "project": "span-1", "quantity": "span-1", "movement_date": "span-1", "notes": "span-3"}
+
+    def __init__(self, *args, company=None, projects=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["material"].queryset = WarehouseMaterial.objects.filter(company=company, is_active=True).order_by("name") if company else WarehouseMaterial.objects.none()
+        self.fields["project"].queryset = projects if projects is not None else Project.objects.none()
 
 
 class ProjectForm(StyledModelForm):

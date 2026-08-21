@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -20,6 +21,7 @@ def logout_view(request):
     return redirect("/login")
 
 from .forms import (
+    AdministrationUserForm,
     AttendanceForm,
     ClientForm,
     DailyReportForm,
@@ -31,6 +33,7 @@ from .forms import (
     InvoiceForm,
     InvoiceItemFormSet,
     MaterialUsageFormSet,
+    MaterialMovementForm,
     OfficeOverheadForm,
     ProgressItemFormSet,
     ProgressReportForm,
@@ -40,6 +43,7 @@ from .forms import (
     ProjectSegmentForm,
     PurchaseOrderForm,
     PurchaseOrderItemFormSet,
+    WarehouseMaterialForm,
 )
 from .models import (
     Approval,
@@ -55,6 +59,7 @@ from .models import (
     FundRequest,
     ImportBatch,
     Invoice,
+    MaterialMovement,
     MaterialUsage,
     Employee,
     OfficeOverhead,
@@ -66,6 +71,7 @@ from .models import (
     ProgressReport,
     Role,
     UserOrganization,
+    WarehouseMaterial,
 )
 from .selectors import company_for_user, may_approve, may_manage_master, organization_for_user, project_for_user, projects_for_user, user_role
 from .services import (
@@ -560,6 +566,86 @@ def office_overhead_approve(request, pk):
 
 
 @login_required
+def warehouse_list(request):
+    company = company_for_user(request.user)
+    if not company:
+        raise PermissionDenied
+    tab = request.GET.get("tab", "stock")
+    if tab not in {"stock", "field", "history"}:
+        raise Http404
+    materials = WarehouseMaterial.objects.filter(company=company).order_by("name", "unit")
+    accessible_projects = projects_for_user(request.user)
+    movements = MaterialMovement.objects.filter(material__company=company, project__in=accessible_projects).select_related("material", "project", "foreman")
+    warehouse_total = materials.aggregate(value=Sum("warehouse_qty"))["value"] or 0
+    field_total = materials.aggregate(value=Sum("field_qty"))["value"] or 0
+    return render(request, "erp/pages/warehouse/list.html", _base_context("warehouse", "Gudang Material", materials=materials, movements=movements[:300], warehouse_tab=tab, warehouse_total=warehouse_total, field_total=field_total, may_manage=may_manage_master(request.user)))
+
+
+@login_required
+@transaction.atomic
+def warehouse_material_form(request, pk=None):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    company = company_for_user(request.user)
+    instance = get_object_or_404(WarehouseMaterial, pk=pk, company=company) if pk else None
+    form = WarehouseMaterialForm(request.POST or None, request.FILES or None, instance=instance)
+    if request.method == "POST" and form.is_valid():
+        material = form.save(commit=False)
+        material.company = company
+        if not material.pk:
+            material.created_by = request.user
+        material.full_clean()
+        material.save()
+        messages.success(request, "Material gudang berhasil disimpan.")
+        return redirect("erp:warehouse-list")
+    return render(request, "erp/pages/warehouse/material_form.html", _base_context("warehouse", "Form Material Gudang", form=form, material=instance))
+
+
+@login_required
+@transaction.atomic
+def warehouse_movement_form(request, movement_type):
+    movement_map = {"take": MaterialMovement.MovementType.TAKE, "return": MaterialMovement.MovementType.RETURN}
+    if movement_type not in movement_map:
+        raise Http404
+    company = company_for_user(request.user)
+    accessible_projects = projects_for_user(request.user)
+    form = MaterialMovementForm(request.POST or None, company=company, projects=accessible_projects)
+    if request.method == "POST" and form.is_valid():
+        material = WarehouseMaterial.objects.select_for_update().get(pk=form.cleaned_data["material"].pk, company=company)
+        quantity = form.cleaned_data["quantity"]
+        selected_type = movement_map[movement_type]
+        project = form.cleaned_data["project"]
+        project_movements = MaterialMovement.objects.filter(material=material, project=project)
+        if not may_manage_master(request.user):
+            project_movements = project_movements.filter(foreman=request.user)
+        taken_qty = project_movements.filter(movement_type=MaterialMovement.MovementType.TAKE).aggregate(value=Sum("quantity"))["value"] or Decimal("0")
+        returned_qty = project_movements.filter(movement_type=MaterialMovement.MovementType.RETURN).aggregate(value=Sum("quantity"))["value"] or Decimal("0")
+        returnable_qty = taken_qty - returned_qty
+        if selected_type == MaterialMovement.MovementType.TAKE and quantity > material.warehouse_qty:
+            form.add_error("quantity", "Stok gudang tidak mencukupi.")
+        elif selected_type == MaterialMovement.MovementType.RETURN and quantity > returnable_qty:
+            form.add_error("quantity", "Jumlah pengembalian melebihi material yang diambil untuk proyek ini.")
+        else:
+            movement = form.save(commit=False)
+            movement.material = material
+            movement.foreman = request.user
+            movement.movement_type = selected_type
+            movement.full_clean()
+            if selected_type == MaterialMovement.MovementType.TAKE:
+                material.warehouse_qty -= quantity
+                material.field_qty += quantity
+            else:
+                material.field_qty -= quantity
+                material.warehouse_qty += quantity
+            material.save(update_fields=["warehouse_qty", "field_qty", "updated_at"])
+            movement.save()
+            messages.success(request, "Perpindahan material berhasil dicatat.")
+            return redirect("erp:warehouse-list")
+    title = "Ambil Material ke Lapangan" if movement_type == "take" else "Kembalikan Material ke Gudang"
+    return render(request, "erp/pages/warehouse/movement_form.html", _base_context("warehouse", title, form=form, movement_type=movement_type))
+
+
+@login_required
 def progress_form(request, pk=None):
     instance = get_object_or_404(ProgressReport, pk=pk, project__in=projects_for_user(request.user)) if pk else ProgressReport()
     def prepare(obj):
@@ -869,7 +955,59 @@ def administration(request):
         company = None
     employees = Employee.objects.filter(company=company).order_by("name") if company else Employee.objects.none()
     accounts = UserOrganization.objects.filter(company=company).select_related("user", "employee", "role") if company else UserOrganization.objects.none()
-    return render(request, "erp/pages/administration/index.html", _base_context("", "Administrasi Sistem", company=company, employees=employees, accounts=accounts, roles=Role.objects.all()))
+    return render(request, "erp/pages/administration/index.html", _base_context("administration", "Administrasi Sistem", company=company, employees=employees, accounts=accounts, roles=Role.objects.all()))
+
+
+@login_required
+@transaction.atomic
+def administration_user_form(request, pk=None):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    company = company_for_user(request.user)
+    if not company:
+        raise PermissionDenied
+    user_model = get_user_model()
+    instance = get_object_or_404(user_model, pk=pk, organization__company=company) if pk else None
+    form = AdministrationUserForm(request.POST or None, company=company, user_instance=instance)
+    if request.method == "POST" and form.is_valid():
+        account = instance or user_model()
+        account.username = form.cleaned_data["username"]
+        account.nama = form.cleaned_data["nama"]
+        account.email = form.cleaned_data["email"] or None
+        account.role = form.cleaned_data["role"].code.lower()
+        account.is_active = form.cleaned_data["is_active"]
+        account.is_staff = account.role in {"admin", "superadmin"}
+        account.is_superuser = account.role == "superadmin"
+        if form.cleaned_data["password"]:
+            account.set_password(form.cleaned_data["password"])
+        account.save()
+        UserOrganization.objects.update_or_create(
+            user=account,
+            defaults={
+                "company": company,
+                "employee": form.cleaned_data["employee"],
+                "role": form.cleaned_data["role"],
+            },
+        )
+        messages.success(request, "User berhasil disimpan.")
+        return redirect("erp:administration")
+    title = "Edit User" if instance else "Tambah User"
+    return render(request, "erp/pages/administration/user_form.html", _base_context("administration", title, form=form, account=instance))
+
+
+@login_required
+@require_POST
+def administration_user_toggle(request, pk):
+    if not may_manage_master(request.user):
+        raise PermissionDenied
+    account = get_object_or_404(get_user_model(), pk=pk, organization__company=company_for_user(request.user))
+    if account == request.user:
+        messages.error(request, "Akun yang sedang digunakan tidak dapat dinonaktifkan.")
+    else:
+        account.is_active = not account.is_active
+        account.save(update_fields=["is_active", "updated_at"])
+        messages.success(request, "Status user berhasil diperbarui.")
+    return redirect("erp:administration")
 
 
 @login_required

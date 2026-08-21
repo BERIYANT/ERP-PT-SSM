@@ -4,9 +4,10 @@
   <div class="toolbar-head">
     <div>
       <div class="eyebrow">System Administration</div>
-      <h2>Organisasi & Akun</h2>
-      <p>Data pegawai, akun, dan role dalam satu struktur perusahaan.</p>
+      <h2>Administrasi User</h2>
+      <p>Kelola akun, role, pegawai terkait, status akses, dan password pengguna.</p>
     </div>
+    <div class="toolbar-actions"><a class="btn" href="{% url 'erp:administration-user-create' %}">+ Tambah User</a></div>
   </div>
 </div>
 <div class="cards">
@@ -15,5 +16,20 @@
   <div class="card"><span class="label">Akun Terhubung</span><strong>{{ accounts|length }}</strong></div>
   <div class="card"><span class="label">Role Sistem</span><strong>{{ roles|length }}</strong></div>
 </div>
-<div class="workbook-strip toolbar-tabs toolbar-tabs--tight"><span class="workbook-tab active">User Organization</span><span class="workbook-tab">Employee</span><span class="workbook-tab">Role</span></div>
-<div class="sheet"><div class="table-wrap"><table><thead><tr><th class="row-index">No</th><th>Username</th><th>Nama Pegawai</th><th>Nomor Pegawai</th><th>Role</th><th>Status</th></tr></thead><tbody>{% for item in accounts %}<tr><td class="row-index">{{ forloop.counter }}</td><td><strong>{{ item.user.username }}</strong></td><td>{{ item.employee.name|default:item.user.nama }}</td><td>{{ item.employee.employee_no|default:'-' }}</td><td>{{ item.role.name }}</td><td><span class="badge APPROVED">AKTIF</span></td></tr>{% empty %}<tr><td colspan="6" class="empty">Belum ada akun organisasi.</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}
+<nav class="workbook-strip toolbar-tabs" aria-label="Administrasi sistem"><span class="workbook-tab active">Daftar User</span></nav>
+<div class="sheet"><div class="table-wrap"><table>
+  <thead><tr><th>No</th><th>Username</th><th>Nama</th><th>Pegawai</th><th>Role</th><th>Status</th><th class="col-aksi">Aksi</th></tr></thead>
+  <tbody>{% for item in accounts %}<tr>
+    <td>{{ forloop.counter }}</td>
+    <td><strong>{{ item.user.username }}</strong><br><small>{{ item.user.email|default:'-' }}</small></td>
+    <td>{{ item.user.nama|default:'-' }}</td>
+    <td>{{ item.employee.name|default:'Belum terhubung' }}{% if item.employee %}<br><small>{{ item.employee.employee_no }}</small>{% endif %}</td>
+    <td><span class="badge">{{ item.role.name }}</span></td>
+    <td>{% if item.user.is_active %}<span class="badge APPROVED">AKTIF</span>{% else %}<span class="badge REJECTED">NONAKTIF</span>{% endif %}</td>
+    <td class="col-aksi"><div class="inline-actions">
+      <a class="btn secondary compact" href="{% url 'erp:administration-user-edit' item.user_id %}">Edit</a>
+      <form method="post" action="{% url 'erp:administration-user-toggle' item.user_id %}" onsubmit="return confirm('{% if item.user.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %} user ini?')">{% csrf_token %}<button class="btn {% if item.user.is_active %}secondary{% endif %} compact" type="submit">{% if item.user.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}</button></form>
+    </div></td>
+  </tr>{% empty %}<tr><td colspan="7" class="empty">Belum ada user organisasi.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

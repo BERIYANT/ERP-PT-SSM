@@ -5,7 +5,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Masuk · SSM ERP</title>
-  <link rel="stylesheet" href="{% static 'css/erp.css' %}?v=20260818-4">
+  <link rel="icon" type="image/png" href="{% static 'img/ssm.ico' %}?v=20260821-2">
+  <link rel="shortcut icon" href="{% static 'img/ssm.ico' %}?v=20260821-2">
+  <link rel="stylesheet" href="{% static 'css/erp.css' %}?v=20260821-29">
   <style>
     *{box-sizing:border-box}
     html,body{min-height:100%;margin:0;background:#ffffff}
@@ -33,7 +35,7 @@
     .login-card{padding:31px 33px 28px;border:1px solid rgba(207,218,231,.86);border-radius:20px;background:rgba(255,255,255,.91);box-shadow:0 28px 80px rgba(28,52,82,.13),0 3px 10px rgba(28,52,82,.04);backdrop-filter:blur(18px)}
     .login-heading{margin-bottom:23px}.login-heading .eyebrow{margin-bottom:6px}.login-heading h1{margin:0;color:#102039;font-size:25px;letter-spacing:-.03em}.login-heading p{margin:7px 0 0;color:#718097;font-size:12px}
     .reveal{opacity:0;transform:translateY(12px);transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1)}
-    .field{margin-bottom:15px}.field label{display:block;margin-bottom:7px;color:#405068;font-size:11px;font-weight:700}.field input{width:100%;height:46px;padding:0 14px;border:1px solid #ccd8e5;border-radius:11px;background:#fbfdff;color:#14233a;font:500 13px Inter,Arial,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s,background .2s,transform .2s}.field input:hover{border-color:#adbed1}.field input:focus{border-color:#2475d5;background:#fff;box-shadow:0 0 0 4px rgba(36,117,213,.1);transform:translateY(-1px)}
+    .field{margin-bottom:15px}.field label{display:block;margin-bottom:7px;color:#405068;font-size:11px;font-weight:700}.field input{width:100%;height:46px;padding:0 14px;border:1px solid #ccd8e5;border-radius:11px;background:#fbfdff;color:#14233a;font:500 13px Inter,Arial,sans-serif;outline:none;transition:border-color .2s,box-shadow .2s,background .2s,transform .2s}.field input:hover{border-color:#adbed1}.field input:focus{border-color:#2475d5;background:#fff;box-shadow:0 0 0 4px rgba(36,117,213,.1);transform:translateY(-1px)}.password-control{position:relative}.password-control input{padding-right:48px}.password-toggle{position:absolute;top:50%;right:9px;display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;outline:0;border-radius:50%;background:transparent;color:#718097;line-height:0;cursor:pointer;transform:translateY(-50%);-webkit-tap-highlight-color:transparent;transition:color .18s ease,opacity .18s ease}.password-toggle:hover{color:#1559b5}.password-toggle:focus-visible{color:#1559b5;box-shadow:0 0 0 2px rgba(36,117,213,.16)}.password-toggle:active{opacity:.68}.password-toggle svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}.password-toggle .eye-off{display:none}.password-toggle[aria-pressed="true"]{color:#1559b5}.password-toggle[aria-pressed="true"] .eye-on{display:none}.password-toggle[aria-pressed="true"] .eye-off{display:block}
     .login-error{min-height:18px;margin:-2px 0 8px;color:#b53b48;font-size:11px}
     .login-submit{width:100%;height:46px;border:0;border-radius:11px;background:linear-gradient(135deg,#1559b5,#2582e5);color:#fff;font:700 12px Inter,Arial,sans-serif;cursor:pointer;box-shadow:0 9px 22px rgba(31,102,204,.24);transition:transform .16s,box-shadow .16s,filter .16s}.login-submit:hover{filter:brightness(1.05);box-shadow:0 13px 28px rgba(31,102,204,.3);transform:translateY(-2px)}.login-submit:active{transform:scale(.98)}.login-submit:disabled{opacity:.7;cursor:wait}
     .login-foot{margin:17px 0 0;text-align:center;color:#8a97a8;font-size:10px}
@@ -81,7 +83,7 @@
       <form class="login-card" id="loginForm">
         <div class="login-heading reveal"><div class="eyebrow">SECURE ACCESS</div><h1>Selamat datang</h1><p>Masuk menggunakan akun perusahaan Anda.</p></div>
         <div class="field username reveal"><label for="username">Username</label><input id="username" name="username" autocomplete="username" placeholder="Masukkan username" required></div>
-        <div class="field password reveal"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required></div>
+        <div class="field password reveal"><label for="password">Password</label><div class="password-control"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required><button class="password-toggle" id="passwordToggle" type="button" aria-label="Tampilkan password" aria-controls="password" aria-pressed="false"><svg class="eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 6.1A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a15.8 15.8 0 0 1-2.2 2.8M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 6 9.5 6a9.7 9.7 0 0 0 3.2-.5M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div></div>
         <div id="error" class="login-error" role="alert"></div>
         <button class="login-submit reveal" id="loginButton" type="submit">Masuk ke Sistem</button>
         <p class="login-foot reveal">Akses aman untuk sistem pengendalian proyek SSM</p>
@@ -114,6 +116,15 @@
       greenFill.addEventListener('animationend',()=>setTimeout(finishIntro,550));
       setTimeout(finishIntro,3600);
     }
+    const passwordInput=document.getElementById('password');
+    const passwordToggle=document.getElementById('passwordToggle');
+    passwordToggle.addEventListener('click',()=>{
+      const shouldShow=passwordInput.type==='password';
+      passwordInput.type=shouldShow?'text':'password';
+      passwordToggle.setAttribute('aria-pressed',String(shouldShow));
+      passwordToggle.setAttribute('aria-label',shouldShow?'Sembunyikan password':'Tampilkan password');
+      passwordInput.focus();
+    });
     document.getElementById('loginForm').addEventListener('submit',async function(e){
       e.preventDefault();
       const button=document.getElementById('loginButton');

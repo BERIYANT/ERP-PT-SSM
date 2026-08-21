@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from django.conf import settings
@@ -425,6 +426,51 @@ class MaterialUsage(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_cost = self.qty * self.unit_cost
         super().save(*args, **kwargs)
+
+
+class WarehouseMaterial(TimeStampedModel):
+    company = models.ForeignKey(Company, on_delete=models.PROTECT, related_name="warehouse_materials")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    unit = models.CharField(max_length=30)
+    warehouse_qty = models.DecimalField(max_digits=18, decimal_places=4, default=0)
+    field_qty = models.DecimalField(max_digits=18, decimal_places=4, default=0)
+    image = models.ImageField(upload_to="erp/materials/%Y/%m/", blank=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="created_warehouse_materials")
+
+    class Meta:
+        db_table = "erp_warehouse_materials"
+        constraints = [models.UniqueConstraint(fields=["company", "name", "unit"], name="uq_warehouse_material_company_name_unit")]
+        ordering = ["name", "unit"]
+
+    def __str__(self):
+        return f"{self.name} ({self.unit})"
+
+
+class MaterialMovement(TimeStampedModel):
+    class MovementType(models.TextChoices):
+        TAKE = "TAKE", "Diambil ke Lapangan"
+        RETURN = "RETURN", "Dikembalikan ke Gudang"
+
+    material = models.ForeignKey(WarehouseMaterial, on_delete=models.PROTECT, related_name="movements")
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="material_movements")
+    foreman = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="material_movements")
+    movement_type = models.CharField(max_length=10, choices=MovementType.choices)
+    quantity = models.DecimalField(max_digits=18, decimal_places=4)
+    movement_date = models.DateField(default=date.today)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        db_table = "erp_material_movements"
+        ordering = ["-movement_date", "-id"]
+        indexes = [models.Index(fields=["project", "movement_type", "movement_date"])]
+
+    def clean(self):
+        if self.quantity <= 0:
+            raise ValidationError({"quantity": "Jumlah material harus lebih dari 0."})
+        if self.project_id and self.material_id and self.project.company_id != self.material.company_id:
+            raise ValidationError("Material dan proyek harus berasal dari perusahaan yang sama.")
 
 
 class ProgressReport(TimeStampedModel):

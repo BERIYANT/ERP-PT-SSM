@@ -10,6 +10,7 @@ GLOBAL_NAVIGATION = [
     ("daily", "Laporan Harian", "erp:daily-list"),
     ("attendance", "Absensi", "erp:attendance-list"),
     ("reports", "Rekap Proyek", "erp:report-index"),
+    ("warehouse", "Gudang Material", "erp:warehouse-list"),
 ]
 
 
@@ -21,4 +22,5 @@ def navigation(request):
     role = user_role(request.user)
     if role in {"admin", "superadmin"}:
         menu.append(("office_overheads", "Overhead Kantor", "erp:office-overheads"))
+        menu.append(("administration", "Administrasi User", "erp:administration"))
     return {"global_navigation": menu}
